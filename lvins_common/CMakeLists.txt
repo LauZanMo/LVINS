@@ -56,5 +56,11 @@ install(DIRECTORY include/
 )
 
 ament_export_targets(${PROJECT_NAME})
-ament_export_dependencies(lvins_config)
+ament_export_dependencies(
+    spdlog
+    yaml-cpp
+    Sophus
+    PCL
+    lvins_config
+)
 ament_package()
