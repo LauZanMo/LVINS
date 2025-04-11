@@ -1,0 +1,14 @@
+label: f400
+lidars:
+    -   lidar:
+            label: lidar0
+            scan_line: 4
+            nearest_distance: 0.1
+            farthest_distance: 70.0
+        T_bs:
+            rows: 4
+            cols: 4
+            data: [ 1.0, 0.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0 ]
