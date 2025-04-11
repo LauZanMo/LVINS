@@ -1,0 +1,9 @@
+repositories:
+    Sophus:
+        type: git
+        url: https://github.com/strasdat/Sophus
+        version: 1.22.10
+    gtsam:
+        type: git
+        url: https://github.com/borglab/gtsam
+        version: 4.2.0
