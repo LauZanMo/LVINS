@@ -13,7 +13,7 @@ LidarRig::LidarRig(std::string label, const std::vector<LidarGeometryBase::sPtr>
 
 LidarRig::sPtr LidarRig::loadFromYaml(const std::string &config_file) {
     // 检查并转换路径（如果有需要）
-    LVINS_CHECK(!config_file.empty(), "yaml_file should not be empty!");
+    LVINS_CHECK(!config_file.empty(), "config_file should not be empty!");
 
     // 根据配置文件加载雷达
     const auto node = YAML::load(path_helper::completePath(config_file));
