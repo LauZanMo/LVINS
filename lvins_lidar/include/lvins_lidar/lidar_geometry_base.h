@@ -120,7 +120,7 @@ struct LVINS_FORMATTER<T, Char, std::enable_if_t<std::is_convertible_v<T *, lvin
      * @param ctx 文本
      * @return 格式化字符尾部迭代器
      */
-    constexpr auto parse(LVINS_FORMAT_PARSE_CONTEXT &ctx) {
+    static constexpr auto parse(const LVINS_FORMAT_PARSE_CONTEXT &ctx) {
         return ctx.begin();
     }
 
@@ -130,7 +130,7 @@ struct LVINS_FORMATTER<T, Char, std::enable_if_t<std::is_convertible_v<T *, lvin
      * @param ctx 输出的格式化文本
      * @return 输出格式化文本的尾部迭代器
      */
-    auto format(const lvins::LidarGeometryBase &lidar, LVINS_FORMAT_CONTEXT &ctx) const {
+    static auto format(const lvins::LidarGeometryBase &lidar, LVINS_FORMAT_CONTEXT &ctx) {
         return LVINS_FORMAT_TO(ctx.out(), "{}", lidar.print());
     }
 };

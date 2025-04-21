@@ -69,30 +69,26 @@ bool convert<CameraGeometryBase::sPtr>::decode(const Node &node, CameraGeometryB
     // 实例化相机
     if (projection_type == "pinhole" && distortion_type == "none") {
         camera = std::make_shared<CameraGeometry<PinholeProjection<NoDistortion>>>(
-                label, width, height, mask, mask_file_name,
-                PinholeProjection<NoDistortion>(projection_params, NoDistortion()));
+                label, width, height, mask, mask_file_name, PinholeProjection(projection_params, NoDistortion()));
     } else if (projection_type == "pinhole" && distortion_type == "radial-tangential") {
         camera = std::make_shared<CameraGeometry<PinholeProjection<RadialTangentialDistortion>>>(
                 label, width, height, mask, mask_file_name,
-                PinholeProjection<RadialTangentialDistortion>(projection_params,
-                                                              RadialTangentialDistortion(distortion_params)));
+                PinholeProjection(projection_params, RadialTangentialDistortion(distortion_params)));
     } else if (projection_type == "pinhole" && distortion_type == "equidistant") {
         camera = std::make_shared<CameraGeometry<PinholeProjection<EquidistantDistortion>>>(
                 label, width, height, mask, mask_file_name,
-                PinholeProjection<EquidistantDistortion>(projection_params, EquidistantDistortion(distortion_params)));
+                PinholeProjection(projection_params, EquidistantDistortion(distortion_params)));
     } else if (projection_type == "omni" && distortion_type == "none") {
         camera = std::make_shared<CameraGeometry<OmniProjection<NoDistortion>>>(
-                label, width, height, mask, mask_file_name,
-                OmniProjection<NoDistortion>(projection_params, NoDistortion()));
+                label, width, height, mask, mask_file_name, OmniProjection(projection_params, NoDistortion()));
     } else if (projection_type == "omni" && distortion_type == "radial-tangential") {
         camera = std::make_shared<CameraGeometry<OmniProjection<RadialTangentialDistortion>>>(
                 label, width, height, mask, mask_file_name,
-                OmniProjection<RadialTangentialDistortion>(projection_params,
-                                                           RadialTangentialDistortion(distortion_params)));
+                OmniProjection(projection_params, RadialTangentialDistortion(distortion_params)));
     } else if (projection_type == "omni" && distortion_type == "equidistant") {
         camera = std::make_shared<CameraGeometry<OmniProjection<EquidistantDistortion>>>(
                 label, width, height, mask, mask_file_name,
-                OmniProjection<EquidistantDistortion>(projection_params, EquidistantDistortion(distortion_params)));
+                OmniProjection(projection_params, EquidistantDistortion(distortion_params)));
     } else {
         LVINS_FATAL("Unsupported combination of projection and distortion types: {} and {}!", projection_type,
                     distortion_type);
