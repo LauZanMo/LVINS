@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <functional>
+#include <type_traits>
 
 namespace std {
 
@@ -28,3 +29,19 @@ struct hash<Eigen::Matrix<Scalar, Rows, Cols, Options, MaxRows, MaxCols>> {
 };
 
 } // namespace std
+
+/**
+ * @brief eigen矩阵向下取整
+ * @tparam Derived 矩阵类型
+ * @param matrix 输入矩阵
+ * @return 向下取整后的eigen矩阵
+ * @note https://stackoverflow.com/questions/824118/why-is-floor-so-slow
+ */
+template<typename Derived>
+auto fastFloor(const Eigen::MatrixBase<Derived> &matrix)
+        -> Eigen::Matrix<int, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime> {
+    using Scalar = typename Derived::Scalar;
+    static_assert(std::is_floating_point_v<Scalar>, "fastFloor only supports floating point types");
+    Eigen::Matrix<int, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime> base = matrix.template cast<int>();
+    return base - (matrix.array() < base.array().template cast<Scalar>()).matrix().template cast<int>();
+}

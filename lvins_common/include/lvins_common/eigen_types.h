@@ -7,6 +7,8 @@
 
 namespace lvins {
 
+using Vec3i = Eigen::Matrix<int, 3, 1>;
+
 using Vec2f = Eigen::Matrix<Float, 2, 1>;
 using Vec3f = Eigen::Matrix<Float, 3, 1>;
 using Vec4f = Eigen::Matrix<Float, 4, 1>;
