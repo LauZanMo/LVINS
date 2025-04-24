@@ -172,7 +172,7 @@ const Mat33f &IncrementalVoxelMap<VoxelContent>::covariance(size_t i) const {
 
 template<typename VoxelContent>
 std::string IncrementalVoxelMap<VoxelContent>::print() const {
-    return LVINS_FORMAT("Nearest Neighbor Searcher: Incremental voxel map\n"
+    return LVINS_FORMAT("Incremental voxel map\n"
                         "  voxel size = {}\n"
                         "  lru horizon = {}\n"
                         "  lru clear cycle = {}\n"
