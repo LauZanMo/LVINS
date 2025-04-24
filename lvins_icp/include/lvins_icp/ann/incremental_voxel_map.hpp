@@ -70,7 +70,7 @@ template<typename VoxelContent>
 void IncrementalVoxelMap<VoxelContent>::insert(const PointCloud &point_cloud, const SE3f &T) {
     // 将点云分别嵌入对应体素
     for (size_t i = 0; i < point_cloud.size(); ++i) {
-        const Vec3f point = T * point_cloud[i].getVector3fMap();
+        const Vec3f point = T * point_cloud[i].getVector3fMap().cast<Float>();
         const Vec3i coord = fastFloor(point * inv_leaf_size_);
 
         // 查询体素是否存在，不存在则创建新的体素
@@ -172,7 +172,7 @@ const Mat33f &IncrementalVoxelMap<VoxelContent>::covariance(size_t i) const {
 
 template<typename VoxelContent>
 std::string IncrementalVoxelMap<VoxelContent>::print() const {
-    return LVINS_FORMAT("Incremental voxel map\n"
+    return LVINS_FORMAT("Incremental voxel map:\n"
                         "  voxel size = {}\n"
                         "  lru horizon = {}\n"
                         "  lru clear cycle = {}\n"

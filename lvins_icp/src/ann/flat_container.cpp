@@ -32,7 +32,7 @@ void FlatContainer::add(const Setting &setting, const PointCloud &point_cloud, s
     }
 
     // 准备加入的点与容器点集中任意点的距离平方小于阈值则直接返回
-    Vec3f trans_point = T * point_cloud[i].getVector3fMap();
+    Vec3f trans_point = T * point_cloud[i].getVector3fMap().cast<Float>();
     if (std::any_of(points_.begin(), points_.end(), [&](const auto &point) {
             return (point - trans_point).squaredNorm() < setting.min_sq_dist_in_cell;
         })) {
@@ -41,8 +41,9 @@ void FlatContainer::add(const Setting &setting, const PointCloud &point_cloud, s
 
     // 将点加入容器
     points_.push_back(std::move(trans_point));
-    normals_.emplace_back(T.so3() * point_cloud[i].getNormalVector3fMap());
-    covariances_.emplace_back(T.so3().matrix() * point_cloud[i].getCovariance3fMap() * T.so3().inverse().matrix());
+    normals_.emplace_back(T.so3() * point_cloud[i].getNormalVector3fMap().cast<Float>());
+    covariances_.emplace_back(T.so3().matrix() * point_cloud[i].getCovariance3fMap().cast<Float>() *
+                              T.so3().inverse().matrix());
 }
 
 } // namespace lvins
