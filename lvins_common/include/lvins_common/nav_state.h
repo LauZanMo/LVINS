@@ -3,6 +3,8 @@
 #include "lvins_common/eigen_types.h"
 #include "lvins_common/logger.h"
 
+#include <deque>
+
 namespace lvins {
 
 /**
@@ -45,7 +47,8 @@ struct NavState {
     Vec3f ba;          ///< 加速度计零偏（m/s^2）
 };
 
-using NavStates = std::vector<NavState, Eigen::aligned_allocator<NavState>>;
+using NavStates      = std::vector<NavState, Eigen::aligned_allocator<NavState>>;
+using NavStateBuffer = std::deque<NavState, Eigen::aligned_allocator<NavState>>;
 
 } // namespace lvins
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lvins_common/mutex_types.h"
+#include "lvins_common/async/mutex_types.h"
 #include "lvins_common/non_copyable.h"
 
 #include <condition_variable>
@@ -50,7 +50,7 @@ public:
      * @brief 从队列中弹出实例
      * @return 弹出的实例
      */
-    T pop() {
+    [[nodiscard]] T pop() {
         lock_t lock(mutex_);
         cv_push_.wait(lock, [this] {
             return !queue_.empty();
@@ -59,6 +59,22 @@ public:
         queue_.pop();
         cv_pop_.notify_one();
         return obj;
+    }
+
+    /**
+     * @brief 尝试从队列中弹出实例
+     * @param obj 弹出的实例
+     * @return 是否成功弹出实例
+     */
+    [[nodiscard]] bool tryPop(T &obj) {
+        lock_t lock(mutex_);
+        if (queue_.empty()) {
+            return false;
+        }
+        obj = std::move(queue_.front());
+        queue_.pop();
+        cv_pop_.notify_one();
+        return true;
     }
 
     /**
@@ -84,7 +100,7 @@ public:
      * @brief 设置队列容量
      * @param capacity 队列容量
      */
-    void set_capacity(size_t capacity) {
+    void setCapacity(size_t capacity) {
         capacity_ = capacity;
     }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lvins_common/mutex_types.h"
+#include "lvins_common/async/mutex_types.h"
 
 #include <functional>
 #include <memory>
