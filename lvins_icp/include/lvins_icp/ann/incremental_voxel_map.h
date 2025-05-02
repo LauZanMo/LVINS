@@ -25,7 +25,7 @@ struct VoxelInfo {
  * @tparam VoxelContent 体素内容类型
  */
 template<typename VoxelContent>
-class IncrementalVoxelMap : public NearestNeighborSearcher {
+class IncrementalVoxelMap final : public NearestNeighborSearcher {
 public:
     /**
      * @brief 构造函数
@@ -90,8 +90,8 @@ public:
      * @param max_sq_dist 指定点与近邻点的最大距离平方
      * @return 实际找到的最近邻数量
      */
-    size_t knnSearch(const Vec3f &point, size_t k, std::vector<size_t> *k_indices, std::vector<Float> *k_sq_dists,
-                     Float max_sq_dist) const override;
+    [[nodiscard]] size_t knnSearch(const Vec3f &point, size_t k, std::vector<size_t> *k_indices,
+                                   std::vector<Float> *k_sq_dists, Float max_sq_dist) const override;
 
     /**
      * @brief 检测点集是否为空
@@ -133,21 +133,21 @@ private:
      * @param point_id 体素点索引
      * @return 地图索引
      */
-    static size_t getIndex(size_t voxel_id, size_t point_id);
+    [[nodiscard]] static size_t getIndex(size_t voxel_id, size_t point_id);
 
     /**
      * @brief 从地图索引中获取体素索引
      * @param map_id 地图索引
      * @return 体素索引
      */
-    static size_t voxelId(size_t map_id);
+    [[nodiscard]] static size_t voxelId(size_t map_id);
 
     /**
      * @brief 从地图索引中获取体素点索引
      * @param map_id 地图索引
      * @return 体素点索引
      */
-    static size_t pointId(size_t map_id);
+    [[nodiscard]] static size_t pointId(size_t map_id);
 
     typename VoxelContent::Setting voxel_setting_;                            ///< 体素设置
     std::unordered_map<Vec3i, size_t> voxel_index_map_;                       ///< 体素坐标-体素索引映射
