@@ -51,8 +51,8 @@ install(DIRECTORY include/
 
 ament_export_targets(${PROJECT_NAME})
 ament_export_dependencies(
+    PCL
     lvins_config
     lvins_common
-    PCL
 )
 ament_package()
