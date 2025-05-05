@@ -20,6 +20,8 @@ add_library(${PROJECT_NAME} SHARED
     src/ann/nearest_neighbor_searcher.cpp
     src/ann/incremental_voxel_map.cpp
     src/ann/yaml/nn_searcher_yaml_serialization.cpp
+    src/preprocess/voxel_grid_sample.cpp
+    src/preprocess/box_filter.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

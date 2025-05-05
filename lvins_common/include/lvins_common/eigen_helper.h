@@ -45,3 +45,19 @@ auto fastFloor(const Eigen::MatrixBase<Derived> &matrix)
     Eigen::Matrix<int, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime> base = matrix.template cast<int>();
     return base - (matrix.array() < base.array().template cast<Scalar>()).matrix().template cast<int>();
 }
+
+/**
+ * @brief eigen队列向下取整
+ * @tparam Derived 队列类型
+ * @param array 输入队列
+ * @return 向下取整后的eigen队列
+ * @note https://stackoverflow.com/questions/824118/why-is-floor-so-slow
+ */
+template<typename Derived>
+auto fastFloor(const Eigen::ArrayBase<Derived> &array)
+        -> Eigen::Array<int, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime> {
+    using Scalar = typename Derived::Scalar;
+    static_assert(std::is_floating_point_v<Scalar>, "fastFloor only supports floating point types");
+    Eigen::Array<int, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime> base = array.template cast<int>();
+    return base - (array < base.template cast<Scalar>()).template cast<int>();
+}
