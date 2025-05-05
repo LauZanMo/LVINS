@@ -51,4 +51,6 @@ private:
 
     lvins::MessageSynchronizer<sensor_msgs::msg::PointCloud2>::uPtr point_cloud_sync_; ///< 点云同步器
     lvins::MessageSynchronizer<sensor_msgs::msg::Image>::uPtr image_sync_;             ///< 图像同步器
+
+    std::vector<std::string> lidar_types_; ///< 雷达类型
 };

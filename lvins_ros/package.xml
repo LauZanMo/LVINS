@@ -32,6 +32,10 @@
     <depend>rosbag2_transport</depend>
     <exec_depend>ros2launch</exec_depend>
 
+    <!-- 系统依赖 -->
+    <depend>libdw-dev</depend>
+    <depend>libbackward-cpp-dev</depend>
+
     <!-- 导出可执行文件 -->
     <export>
         <build_type>ament_cmake</build_type>

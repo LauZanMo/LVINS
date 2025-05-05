@@ -26,7 +26,7 @@ def generate_launch_description():
     )
     odometry_imu_topic_arg = DeclareLaunchArgument(
         "odometry_imu_topic",
-        default_value="/imu0/data",
+        default_value="/imu0/data_raw",
         description="IMU topic for odometry to subscribe to.",
     )
     odometry_point_cloud_topics_arg = DeclareLaunchArgument(
@@ -55,7 +55,9 @@ def generate_launch_description():
                 "log_path": LaunchConfiguration("odometry_log_path"),
                 "config_file": LaunchConfiguration("odometry_config_file"),
                 "imu_topic": LaunchConfiguration("odometry_imu_topic"),
-                "point_cloud_topics": LaunchConfiguration("odometry_point_cloud_topics"),
+                "point_cloud_topics": LaunchConfiguration(
+                    "odometry_point_cloud_topics"
+                ),
                 "image_topics": LaunchConfiguration("odometry_image_topics"),
                 "reset_topic": LaunchConfiguration("odometry_reset_topic"),
             }

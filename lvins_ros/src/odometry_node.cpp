@@ -1,8 +1,10 @@
 #include "lvins_ros/odometry_node.h"
 #include "lvins_common/logger.h"
 #include "lvins_common/path_helper.h"
-
 #include "lvins_common/sensor/imu.h"
+#include "lvins_ros/point_cloud_converter.h"
+
+#include <pcl_conversions/pcl_conversions.h>
 
 #define BACKWARD_HAS_DW 1
 #include <backward.hpp>
@@ -83,6 +85,7 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
 
         point_cloud_sync_ =
                 std::make_unique<MessageSynchronizer<sensor_msgs::msg::PointCloud2>>(point_cloud_topics.size());
+        lidar_types_.resize(point_cloud_topics.size());
     }
 
     { // 创建图像订阅
@@ -141,8 +144,41 @@ void OdometryNode::imuCallback(const sensor_msgs::msg::Imu::ConstSharedPtr &msg)
 void OdometryNode::pointCloudCallback(size_t idx, const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg) {
     if (point_cloud_sync_->push(idx, msg)) {
         const auto &point_cloud_msgs = point_cloud_sync_->getSyncMessages();
+
         // 转换为内部信息
-        // estimator_->addPointClouds(point_clouds[0]->timestamp, point_clouds);
+        std::vector<RawPointCloud::Ptr> point_clouds;
+        for (size_t i = 0; i < point_cloud_msgs.size(); ++i) {
+            if (lidar_types_[i].empty()) {
+                lidar_types_[i] = point_cloud_converter::detectLidarType(*point_cloud_msgs[i]);
+                LVINS_INFO("Lidar #{} type detected: {}", i, lidar_types_[i]);
+            }
+
+            RawPointCloud::Ptr point_cloud;
+            if (lidar_types_[i] == "ouster") {
+                const auto os_point_cloud = pcl::make_shared<OusterPointCloud>();
+                pcl::fromROSMsg(*point_cloud_msgs[i], *os_point_cloud);
+                point_cloud = point_cloud_converter::convert(*os_point_cloud);
+            } else if (lidar_types_[i] == "velodyne") {
+                const auto vld_point_cloud = pcl::make_shared<VelodynePointCloud>();
+                pcl::fromROSMsg(*point_cloud_msgs[i], *vld_point_cloud);
+                point_cloud = point_cloud_converter::convert(*vld_point_cloud);
+            } else if (lidar_types_[i] == "livox") {
+                const auto lv_point_cloud = pcl::make_shared<LivoxPointCloud>();
+                pcl::fromROSMsg(*point_cloud_msgs[i], *lv_point_cloud);
+                point_cloud = point_cloud_converter::convert(*lv_point_cloud);
+            } else if (lidar_types_[i] == "robosense") {
+                const auto rs_point_cloud = pcl::make_shared<RobosensePointCloud>();
+                pcl::fromROSMsg(*point_cloud_msgs[i], *rs_point_cloud);
+                point_cloud = point_cloud_converter::convert(*rs_point_cloud);
+            } else {
+                return;
+            }
+
+            point_clouds.push_back(std::move(point_cloud));
+        }
+
+        // 输入系统
+        // estimator_->addPointClouds(point_clouds[0]->header.stamp, point_clouds);
     }
 }
 
