@@ -18,17 +18,18 @@ RawPointCloud::Ptr voxelGridSample(const RawPointCloud::ConstPtr &point_cloud, f
 
 /**
  * @brief 自适应体素网格采样
- * @details 循环调用体素网格采样，并以两倍放大体素网格尺寸，直到点云数量小于期望值
+ * @details 循环调用体素网格采样，并根据情况调整体素网格尺寸，直到点云数量符合期望值
  * @note 主要为低算力平台设计，以限制单次点云处理时间
  * @param point_cloud 输入点云
  * @param init_voxel_grid_size 初始体素网格尺寸（m）
+ * @param min_voxel_grid_size 最小体素网格尺寸（m）
  * @param max_voxel_grid_size 最大体素网格尺寸（m）
  * @param desire_point_cloud_size 期望点云数量
  * @param final_voxel_grid_size 最终体素网格尺寸（m）
  * @return 处理后的点云
  */
 RawPointCloud::Ptr adaptiveVoxelGridSample(const RawPointCloud::ConstPtr &point_cloud, float init_voxel_grid_size,
-                                           float max_voxel_grid_size, size_t desire_point_cloud_size,
-                                           float *final_voxel_grid_size);
+                                           float min_voxel_grid_size, float max_voxel_grid_size,
+                                           size_t desire_point_cloud_size, float *final_voxel_grid_size = nullptr);
 
 } // namespace lvins
