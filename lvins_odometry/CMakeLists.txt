@@ -14,6 +14,10 @@ lvins_setup()
 
 # 添加库
 add_library(${PROJECT_NAME} SHARED
+    src/estimator.cpp
+    src/drawer_base.cpp
+    src/base/lidar_frame.cpp
+    src/base/lidar_frame_bundle.cpp
     src/fusion/eskf.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
