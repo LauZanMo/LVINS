@@ -43,14 +43,15 @@ public:
 
 protected:
     /**
-     * @brief 绘制当前帧束
-     * @param timestamp 当前帧束时间戳
-     * @param bundle 当前帧束
+     * @brief 绘制雷达帧束
+     * @param timestamp 雷达帧束时间戳
+     * @param bundle 雷达帧束
      */
     virtual void drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle) = 0;
 
     /**
      * @brief 发布重置消息
+     * @todo 改成定时发送重置次数
      */
     virtual void publishReset() = 0;
 

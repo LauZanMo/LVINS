@@ -11,7 +11,7 @@ ESKF::ESKF(const YAML::Node &config, NoiseParameters::sConstPtr noise_params, Ve
     // 初始化参数
     buffer_len_         = static_cast<int64_t>(YAML::get<double>(config, "buffer_len") * 1e9);
     max_iterations_     = YAML::get<size_t>(config, "max_iterations");
-    iteration_quit_eqs_ = YAML::get<Float>(config, "iteration_quit_eqs");
+    iteration_quit_eps_ = YAML::get<Float>(config, "iteration_quit_eps");
     dim_                = O_EXT_P + 6 * static_cast<long>(T_bs_.size());
 
     // 初始化传感器噪声协方差矩阵
@@ -26,7 +26,7 @@ YAML::Node ESKF::writeToYaml() const {
     YAML::Node node;
     node["buffer_len"]         = static_cast<double>(buffer_len_) * 1e-9;
     node["max_iterations"]     = max_iterations_;
-    node["iteration_quit_eqs"] = iteration_quit_eqs_;
+    node["iteration_quit_eps"] = iteration_quit_eps_;
     return node;
 }
 
@@ -214,6 +214,15 @@ const std::vector<SE3f> &ESKF::Tbs() const {
     return T_bs_;
 }
 
+std::string ESKF::print() const {
+    return LVINS_FORMAT("ESKF:\n"
+                        "  buffer length = {:.3f}\n"
+                        "  max iterations = {}\n"
+                        "  iteration quit epsilon = {}\n"
+                        "  dim = {}",
+                        static_cast<double>(buffer_len_) * 1e-9, max_iterations_, iteration_quit_eps_, dim_);
+}
+
 void ESKF::update(const ObserveFunc &obs) {
     // 计算观测量
     MatXf H, V;
@@ -267,7 +276,7 @@ void ESKF::update(const IterativeObserveFunc &obs) {
         correctNominal(delta_state);
 
         // 误差小于阈值则退出
-        if (delta_state.norm() < iteration_quit_eqs_) {
+        if (delta_state.norm() < iteration_quit_eps_) {
             break;
         }
     }

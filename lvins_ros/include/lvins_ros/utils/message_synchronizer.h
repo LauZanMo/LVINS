@@ -46,4 +46,4 @@ private:
 
 } // namespace lvins
 
-#include "lvins_ros/message_synchronizer.hpp"
+#include "lvins_ros/utils/message_synchronizer.hpp"

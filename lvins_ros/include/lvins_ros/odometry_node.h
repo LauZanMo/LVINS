@@ -1,6 +1,7 @@
 #pragma once
 
-#include "lvins_ros/message_synchronizer.h"
+#include "lvins_odometry/estimator.h"
+#include "lvins_ros/utils/message_synchronizer.h"
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
@@ -8,6 +9,10 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
+/**
+ * @brief 里程计节点类
+ * @details 该类用于接收、同步来自ROS的IMU、点云和图像数据，并将其输入到估计器中进行状态估计，同时负责提供估计器的服务
+ */
 class OdometryNode final : public rclcpp::Node {
 public:
     /**
@@ -42,6 +47,8 @@ public:
     void imageCallback(size_t idx, const sensor_msgs::msg::Image::ConstSharedPtr &msg);
 
 private:
+    lvins::Estimator::uPtr estimator_; ///< 估计器
+
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;                               ///< IMU信息订阅者
     std::vector<rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> point_cloud_subs_; ///< 点云信息订阅者
     rclcpp::CallbackGroup::SharedPtr point_cloud_callback_group_;                                  ///< 点云信息回调组

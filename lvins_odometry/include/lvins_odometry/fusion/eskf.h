@@ -97,6 +97,12 @@ public:
      */
     [[nodiscard]] const std::vector<SE3f> &Tbs() const;
 
+    /**
+     * @brief 打印ESKF参数
+     * @return ESKF参数
+     */
+    [[nodiscard]] std::string print() const;
+
     // 各状态量在状态向量中的起点索引
     static constexpr long O_P     = 0;
     static constexpr long O_V     = 3;
@@ -176,8 +182,33 @@ private:
     NoiseParameters::sConstPtr noise_params_; ///< 噪声参数
     int64_t buffer_len_;                      ///< 缓冲区长度（ns）
     size_t max_iterations_;                   ///< 最大迭代次数
-    Float iteration_quit_eqs_;                ///< 迭代退出阈值
+    Float iteration_quit_eps_;                ///< 迭代退出阈值
     long dim_;                                ///< 状态维度（p v q bg ba g_w ext_p ext_q）
 };
 
 } // namespace lvins
+
+/**
+ * @brief ESKF格式化器
+ */
+template<>
+struct LVINS_FORMATTER<lvins::ESKF> {
+    /**
+     * @brief 从文本中解析格式化字符
+     * @param ctx 文本
+     * @return 格式化字符尾部迭代器
+     */
+    static constexpr auto parse(const LVINS_FORMAT_PARSE_CONTEXT &ctx) {
+        return ctx.begin();
+    }
+
+    /**
+     * @brief 格式化
+     * @param eskf ESKF
+     * @param ctx 输出的格式化文本
+     * @return 输出格式化文本的尾部迭代器
+     */
+    static auto format(const lvins::ESKF &eskf, LVINS_FORMAT_CONTEXT &ctx) {
+        return LVINS_FORMAT_TO(ctx.out(), "{}", eskf.print());
+    }
+};

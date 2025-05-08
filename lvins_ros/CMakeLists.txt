@@ -27,7 +27,8 @@ lvins_setup()
 # 添加可执行文件
 add_executable(odometry_node
     src/odometry_node.cpp
-    src/point_cloud_converter.cpp
+    src/impl/drawer_rviz.cpp
+    src/utils/point_cloud_converter.cpp
 )
 target_include_directories(odometry_node PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

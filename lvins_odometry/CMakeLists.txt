@@ -16,6 +16,7 @@ lvins_setup()
 add_library(${PROJECT_NAME} SHARED
     src/estimator.cpp
     src/drawer_base.cpp
+    src/preprocessor.cpp
     src/base/lidar_frame.cpp
     src/base/lidar_frame_bundle.cpp
     src/fusion/eskf.cpp

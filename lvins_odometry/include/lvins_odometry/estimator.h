@@ -2,9 +2,12 @@
 
 #include "lvins_camera/camera_rig.h"
 #include "lvins_common/sensor/imu.h"
+#include "lvins_common/timer.h"
 #include "lvins_lidar/lidar_rig.h"
+#include "lvins_odometry/base/lidar_frame_bundle.h"
 #include "lvins_odometry/drawer_base.h"
 #include "lvins_odometry/fusion/eskf.h"
+#include "lvins_odometry/preprocessor.h"
 
 namespace lvins {
 
@@ -65,9 +68,24 @@ public:
 
 private:
     // 系统
-    LidarRig::sPtr lidar_rig_;   ///< 激光雷达组
-    CameraRig::sPtr camera_rig_; ///< 相机组
-    DrawerBase::uPtr drawer_;    ///< 绘制器
+    LidarRig::sPtr lidar_rig_;        ///< 激光雷达组
+    CameraRig::sPtr camera_rig_;      ///< 相机组
+    DrawerBase::uPtr drawer_;         ///< 绘制器
+    Preprocessor::uPtr preprocessor_; ///< 预处理器
+    ESKF::uPtr eskf_;                 ///< 扩展卡尔曼滤波器
+
+    EstimatorStatus status_{EstimatorStatus::INITIALIZING}; ///< 估计器状态
+
+    // 缓冲区
+    AsyncQueue<LidarFrameBundle::sPtr> lidar_frame_bundle_buffer_; ///< 雷达帧束缓冲区
+
+    // 计时器
+    LVINS_DECLARE_TIMER(lidar_preprocess_timer_) ///< 雷达预处理计时器
+
+    // 参数
+    bool acc_in_g_;         ///< 加速度是否以g为单位
+    Float gravity_mag_;     ///< 重力向量模长
+    size_t min_icp_points_; ///< 进行ICP的最小点数
 };
 
 } // namespace lvins

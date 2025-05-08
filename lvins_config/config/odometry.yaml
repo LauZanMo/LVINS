@@ -1,0 +1,54 @@
+acc_in_g: true # 加速度是否以g为单位
+gravity_mag: 9.81 # 重力向量模长（m/s²）
+
+noise_params:
+    prior_roll_pitch_std: 0.01 # 先验横滚俯仰角标准差（rad）
+    prior_yaw_std: 0.01 # 先验航向角标准差（rad）
+    prior_pos_std: 0.1 # 先验位置标准差（m）
+    prior_vel_std: 0.1 # 先验速度标准差（m/s）
+    prior_gyr_bias_std: 0.1 # 先验陀螺仪零偏标准差（rad/s）
+    prior_acc_bias_std: 0.1 # 先验加速度计零偏标准差（m/s^2）
+
+    gyr_std: 1e-2 # 陀螺仪标准差（rad/s/√Hz）
+    acc_std: 1e-1 # 加速度计标准差 (m/s^2/√Hz）
+    gyr_bias_std: 1e-3 # 陀螺仪零偏标准差（rad/s）
+    acc_bias_std: 1e-2 # 加速度计零偏标准差（m/s^2）
+    integration_std: 1e-1 # 积分标准差（m/s）
+    init_bias_std: 1e-2 # 初始零偏标准差（rad/s、m/s^2）
+
+    odom_rot_std: 1e-2 # 里程计姿态角标准差（rad）
+    odom_trans_std: 1e-1 # 里程计位移标准差（m）
+
+    extrinsic_rot_std: 2e-4 # 外参姿态角标准差（rad）
+    extrinsic_trans_std: 2e-3 # 外参位移标准差（m）
+
+lidar_rig_file: "config/calibration/f400.yaml" # 雷达配置文件（支持相对yl_slam的路径）
+camera_rig_file: "" # 相机配置文件（支持相对yl_slam的路径）
+
+drawer:
+    # 话题发布名称
+    topic:
+        current_nav_state: "current_nav_state"
+        frame_point_clouds:
+            - "lidar0/point_cloud"
+        submap: "submap"
+        reset: "reset"
+    # 坐标系id
+    frame_id:
+        lidars:
+            - "lidar0"
+        imu: "imu0"
+        map: "map"
+
+preprocessor:
+    point_cloud:
+        crop_box_size: 0.5 # 裁剪尺寸（m）
+        voxel_grid_size: 0.3 # 体素尺寸（m）
+        min_voxel_size: 0.2 # 最小体素尺寸（m）
+        max_voxel_size: 1.0 # 最大体素尺寸（m）
+        desire_point_cloud_size: 5000 # 期望点云大小
+
+eskf:
+    buffer_len: 0.3 # 延迟更新的IMU缓冲区长度（s）
+    max_iterations: 10 # 最大迭代次数
+    iteration_quit_eps: 1e-3 # 迭代停止的最小步长

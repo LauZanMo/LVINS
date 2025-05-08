@@ -2,8 +2,10 @@
 #include "lvins_common/logger.h"
 #include "lvins_common/path_helper.h"
 #include "lvins_common/sensor/imu.h"
-#include "lvins_ros/point_cloud_converter.h"
+#include "lvins_ros/impl/drawer_rviz.h"
+#include "lvins_ros/utils/point_cloud_converter.h"
 
+#include <cv_bridge/cv_bridge.h>
 #include <pcl_conversions/pcl_conversions.h>
 
 #define BACKWARD_HAS_DW 1
@@ -54,6 +56,11 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
 
     // 加载配置
     LVINS_INFO("Starting odometry node...");
+    const auto config = YAML::load(config_file);
+
+    // 初始化估计器
+    DrawerBase::uPtr drawer = std::make_unique<DrawerRviz>(config["drawer"], *this);
+    estimator_              = std::make_unique<Estimator>(config, std::move(drawer));
 
     // 设置服务质量（QoS）
     rclcpp::QoS qos(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_LAST, 1000));
@@ -109,7 +116,7 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
         using ResetCallback = std::function<void(const std_srvs::srv::Trigger::Request::ConstSharedPtr &,
                                                  const std_srvs::srv::Trigger::Response::SharedPtr &)>;
         ResetCallback cb    = [this]([[maybe_unused]] auto &&request, auto &&response) {
-            // estimator_->reset();
+            estimator_->reset();
             response->success = true;
             response->message = "Odometry node reset!";
         };
@@ -138,7 +145,7 @@ void OdometryNode::imuCallback(const sensor_msgs::msg::Imu::ConstSharedPtr &msg)
                      LVINS_FLOAT(msg->linear_acceleration.z)};
 
     // 输入系统
-    // estimator_->addImu(imu);
+    estimator_->addImu(imu);
 }
 
 void OdometryNode::pointCloudCallback(size_t idx, const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg) {
@@ -146,47 +153,56 @@ void OdometryNode::pointCloudCallback(size_t idx, const sensor_msgs::msg::PointC
         const auto &point_cloud_msgs = point_cloud_sync_->getSyncMessages();
 
         // 转换为内部信息
-        std::vector<RawPointCloud::Ptr> point_clouds;
+        std::vector<RawPointCloud::Ptr> raw_point_clouds;
         for (size_t i = 0; i < point_cloud_msgs.size(); ++i) {
             if (lidar_types_[i].empty()) {
                 lidar_types_[i] = point_cloud_converter::detectLidarType(*point_cloud_msgs[i]);
                 LVINS_INFO("Lidar #{} type detected: {}", i, lidar_types_[i]);
             }
 
-            RawPointCloud::Ptr point_cloud;
+            RawPointCloud::Ptr raw_point_cloud;
             if (lidar_types_[i] == "ouster") {
                 const auto os_point_cloud = pcl::make_shared<OusterPointCloud>();
                 pcl::fromROSMsg(*point_cloud_msgs[i], *os_point_cloud);
-                point_cloud = point_cloud_converter::convert(*os_point_cloud);
+                raw_point_cloud = point_cloud_converter::convert(*os_point_cloud);
             } else if (lidar_types_[i] == "velodyne") {
                 const auto vld_point_cloud = pcl::make_shared<VelodynePointCloud>();
                 pcl::fromROSMsg(*point_cloud_msgs[i], *vld_point_cloud);
-                point_cloud = point_cloud_converter::convert(*vld_point_cloud);
+                raw_point_cloud = point_cloud_converter::convert(*vld_point_cloud);
             } else if (lidar_types_[i] == "livox") {
                 const auto lv_point_cloud = pcl::make_shared<LivoxPointCloud>();
                 pcl::fromROSMsg(*point_cloud_msgs[i], *lv_point_cloud);
-                point_cloud = point_cloud_converter::convert(*lv_point_cloud);
+                raw_point_cloud = point_cloud_converter::convert(*lv_point_cloud);
             } else if (lidar_types_[i] == "robosense") {
                 const auto rs_point_cloud = pcl::make_shared<RobosensePointCloud>();
                 pcl::fromROSMsg(*point_cloud_msgs[i], *rs_point_cloud);
-                point_cloud = point_cloud_converter::convert(*rs_point_cloud);
+                raw_point_cloud = point_cloud_converter::convert(*rs_point_cloud);
             } else {
                 return;
             }
 
-            point_clouds.push_back(std::move(point_cloud));
+            raw_point_clouds.push_back(std::move(raw_point_cloud));
         }
 
         // 输入系统
-        // estimator_->addPointClouds(point_clouds[0]->header.stamp, point_clouds);
+        const auto timestamp = rclcpp::Time(point_cloud_msgs[0]->header.stamp).nanoseconds();
+        estimator_->addPointClouds(timestamp, raw_point_clouds);
     }
 }
 
 void OdometryNode::imageCallback(size_t idx, const sensor_msgs::msg::Image::ConstSharedPtr &msg) {
     if (image_sync_->push(idx, msg)) {
         const auto &image_msgs = image_sync_->getSyncMessages();
+
         // 转换为内部信息
-        // estimator_->addImages(images[0]->timestamp, images);
+        std::vector<cv::Mat> raw_images;
+        for (const auto &image_msg: image_msgs) {
+            raw_images.push_back(cv_bridge::toCvCopy(image_msg)->image);
+        }
+
+        // 输入系统
+        const auto timestamp = rclcpp::Time(image_msgs[0]->header.stamp).nanoseconds();
+        estimator_->addImages(timestamp, raw_images);
     }
 }
 
