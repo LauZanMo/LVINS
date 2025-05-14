@@ -1,4 +1,4 @@
-#include "lvins_common/timer.h"
+#include "lvins_common/time/timer.h"
 
 #include <spdlog/fmt/chrono.h>
 
@@ -11,6 +11,11 @@ Timer::Timer() {
 void Timer::restart() {
     start_ = Clock::now();
     stop_  = false;
+}
+
+void Timer::stop() {
+    duration_ = Clock::now() - start_;
+    stop_     = true;
 }
 
 double Timer::costInSec() {
@@ -32,9 +37,9 @@ int64_t Timer::costInNsec() {
     return duration_.count();
 }
 
-void Timer::stop() {
-    duration_ = Clock::now() - start_;
-    stop_     = true;
+int64_t Timer::currentTimeInMsec() {
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(Clock::now().time_since_epoch()).count();
 }
 
 std::string Timer::currentTime() {

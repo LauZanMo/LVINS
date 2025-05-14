@@ -65,6 +65,12 @@ public:
     int64_t costInNsec();
 
     /**
+     * @brief 获取当前时间（毫秒）
+     * @return 当前时间（毫秒）
+     */
+    static int64_t currentTimeInMsec();
+
+    /**
      * @brief 获取当前时间（年-月-日 时:分:秒）
      * @return 当前时间字符串
      */

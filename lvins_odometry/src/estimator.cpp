@@ -54,6 +54,17 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::uPtr drawer) : drawer
         T_bs.insert(T_bs.end(), camera_rig_->Tbs().begin(), camera_rig_->Tbs().end());
     eskf_ = std::make_unique<ESKF>(config["eskf"], noise_params, g_w, T_bs);
     LVINS_INFO("Printing ESKF parameters:\n{}", *eskf_);
+
+    // 初始化时间轮调度器
+    wheel_scheduler_ = std::make_shared<TimeWheelScheduler>();
+    wheel_scheduler_->start();
+    wheel_scheduler_->addPeriodicTask(1000, [this] {
+        drawer_->updateResetTimes(reset_count_); // 以1s为周期更新重置次数
+    });
+
+    // 读取估计器配置
+    const auto estimator_config = config["estimator"];
+    min_icp_points_             = YAML::get<size_t>(estimator_config, "min_icp_points");
 }
 
 Estimator::~Estimator() {
@@ -79,6 +90,7 @@ void Estimator::reset() {
     // 清空缓冲区
     lidar_frame_bundle_buffer_.clear();
 
+    ++reset_count_;
     LVINS_INFO("Estimator reset!");
 }
 
@@ -87,6 +99,19 @@ void Estimator::addImu(const Imu &imu) {
     Imu input(imu);
     if (acc_in_g_) {
         input.acc *= gravity_mag_;
+    }
+
+    if (status_ == EstimatorStatus::INITIALIZING) {
+
+    } else if (status_ == EstimatorStatus::ESTIMATING) {
+        if (eskf_->propagate(input)) {
+            // 更新对应updateState时间戳的帧束，并向增量地图嵌入点云
+        }
+
+        LidarFrameBundle::sPtr lidar_frame_bundle;
+        if (lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
+            // 构建观测函数，并添加到ESKF
+        }
     }
 
     LVINS_INFO("Get IMU data: {}.", imu);

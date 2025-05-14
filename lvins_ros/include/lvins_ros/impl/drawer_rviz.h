@@ -6,7 +6,7 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
-#include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/u_int64.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 
 namespace lvins {
@@ -33,13 +33,14 @@ private:
     void drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle) override;
 
     /**
-     * @brief 发布重置消息
+     * @brief 发布重置次数
+     * @param times 重置次数
      */
-    void publishReset() override;
+    void publishResetTimes(size_t times) override;
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr current_nav_state_pub_;
     std::vector<rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> frame_point_cloud_pubs_;
-    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr reset_pub_;
+    rclcpp::Publisher<std_msgs::msg::UInt64>::SharedPtr reset_times_pub_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     std::vector<std::string> lidar_frame_ids_;

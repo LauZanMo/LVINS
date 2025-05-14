@@ -29,12 +29,17 @@ void DrawerBase::reset() {
 
     // 使能标志位并发布重置消息
     reset_ = true;
-    publishReset();
 }
 
 void DrawerBase::updateLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle) {
-    draw_task_buffer_.push([this, timestamp, bundle]() {
+    draw_task_buffer_.push([this, timestamp, bundle] {
         drawLidarFrameBundle(timestamp, bundle);
+    });
+}
+
+void DrawerBase::updateResetTimes(size_t times) {
+    draw_task_buffer_.push([this, times] {
+        publishResetTimes(times);
     });
 }
 

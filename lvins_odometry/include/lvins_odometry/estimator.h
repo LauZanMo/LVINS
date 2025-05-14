@@ -2,7 +2,8 @@
 
 #include "lvins_camera/camera_rig.h"
 #include "lvins_common/sensor/imu.h"
-#include "lvins_common/timer.h"
+#include "lvins_common/time/time_wheel_scheduler.h"
+#include "lvins_common/time/timer.h"
 #include "lvins_lidar/lidar_rig.h"
 #include "lvins_odometry/base/lidar_frame_bundle.h"
 #include "lvins_odometry/drawer_base.h"
@@ -75,11 +76,13 @@ private:
     ESKF::uPtr eskf_;                 ///< 扩展卡尔曼滤波器
 
     EstimatorStatus status_{EstimatorStatus::INITIALIZING}; ///< 估计器状态
+    std::atomic<size_t> reset_count_{0};                    ///< 重置次数
 
     // 缓冲区
     AsyncQueue<LidarFrameBundle::sPtr> lidar_frame_bundle_buffer_; ///< 雷达帧束缓冲区
 
     // 计时器
+    TimeWheelScheduler::sPtr wheel_scheduler_;   ///< 时间轮调度器
     LVINS_DECLARE_TIMER(lidar_preprocess_timer_) ///< 雷达预处理计时器
 
     // 参数

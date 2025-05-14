@@ -41,6 +41,12 @@ public:
      */
     void updateLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle);
 
+    /**
+     * @brief 更新重置次数
+     * @param times 重置次数
+     */
+    void updateResetTimes(size_t times);
+
 protected:
     /**
      * @brief 绘制雷达帧束
@@ -50,10 +56,10 @@ protected:
     virtual void drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle) = 0;
 
     /**
-     * @brief 发布重置消息
-     * @todo 改成定时发送重置次数
+     * @brief 发布重置次数
+     * @param times 重置次数
      */
-    virtual void publishReset() = 0;
+    virtual void publishResetTimes(size_t times) = 0;
 
 private:
     using DrawTask = std::function<void()>;

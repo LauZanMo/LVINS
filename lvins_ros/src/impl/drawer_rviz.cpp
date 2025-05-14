@@ -33,8 +33,8 @@ DrawerRviz::DrawerRviz(const YAML::Node &config, rclcpp::Node &node) {
     for (const auto &topic: frame_point_cloud_topics) {
         frame_point_cloud_pubs_.push_back(node.create_publisher<sensor_msgs::msg::PointCloud2>(topic, qos));
     }
-    reset_pub_      = node.create_publisher<std_msgs::msg::Bool>(reset_topic, qos);
-    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(node);
+    reset_times_pub_ = node.create_publisher<std_msgs::msg::UInt64>(reset_topic, qos);
+    tf_broadcaster_  = std::make_unique<tf2_ros::TransformBroadcaster>(node);
 }
 
 void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle) {
@@ -106,11 +106,11 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
     }
 }
 
-void DrawerRviz::publishReset() {
-    if (reset_pub_->get_subscription_count() != 0) {
-        std_msgs::msg::Bool msg;
-        msg.data = true;
-        reset_pub_->publish(msg);
+void DrawerRviz::publishResetTimes(size_t times) {
+    if (reset_times_pub_->get_subscription_count() != 0) {
+        std_msgs::msg::UInt64 msg;
+        msg.data = times;
+        reset_times_pub_->publish(msg);
     }
 }
 
