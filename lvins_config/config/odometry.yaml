@@ -1,4 +1,4 @@
-acc_in_g: true # 加速度是否以g为单位
+acc_in_g: false # 加速度是否以g为单位
 gravity_mag: 9.81 # 重力向量模长（m/s²）
 
 noise_params:
@@ -52,3 +52,13 @@ eskf:
     buffer_len: 0.3 # 延迟更新的IMU缓冲区长度（s）
     max_iterations: 10 # 最大迭代次数
     iteration_quit_eps: 1e-3 # 迭代停止的最小步长
+
+initializer:
+    type: "static" # 静态初始化器
+    parameters:
+        rows: 3
+        cols: 1
+        data: [ 1.0, 0.02, 0.2 ] # 参数顺序 [初始化周期（s）、陀螺仪零速阈值（rad/s）、加速度零速阈值（m/s^2）]
+
+estimator:
+    min_icp_points: 100 # 进行ICP的最小点数

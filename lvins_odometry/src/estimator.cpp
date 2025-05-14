@@ -55,6 +55,10 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::uPtr drawer) : drawer
     eskf_ = std::make_unique<ESKF>(config["eskf"], noise_params, g_w, T_bs);
     LVINS_INFO("Printing ESKF parameters:\n{}", *eskf_);
 
+    // 加载初始化器
+    initializer_ = InitializerBase::loadFromYaml(config["initializer"], g_w);
+    LVINS_INFO("Printing initializer parameters:\n{}", *initializer_);
+
     // 初始化时间轮调度器
     wheel_scheduler_ = std::make_shared<TimeWheelScheduler>();
     wheel_scheduler_->start();
@@ -102,19 +106,36 @@ void Estimator::addImu(const Imu &imu) {
     }
 
     if (status_ == EstimatorStatus::INITIALIZING) {
+        // 初始化器添加IMU数据
+        initializer_->addImu(input);
 
+        // 初始化器添加雷达帧束
+        LidarFrameBundle::sPtr lidar_frame_bundle;
+        while (lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
+            initializer_->addLidarFrameBundle(lidar_frame_bundle);
+        }
+
+        // 尝试初始化
+        if (initializer_->tryInitialize()) {
+            // 初始化ESKF
+            eskf_->initialize(initializer_->navStates(), initializer_->imus());
+
+            // 初始化局部地图
+            for ([[maybe_unused]] const auto &bundle: initializer_->lidarFrameBundles()) {}
+
+            // 更新状态标志位
+            status_ = EstimatorStatus::ESTIMATING;
+        }
     } else if (status_ == EstimatorStatus::ESTIMATING) {
         if (eskf_->propagate(input)) {
             // 更新对应updateState时间戳的帧束，并向增量地图嵌入点云
         }
 
         LidarFrameBundle::sPtr lidar_frame_bundle;
-        if (lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
+        while (lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
             // 构建观测函数，并添加到ESKF
         }
     }
-
-    LVINS_INFO("Get IMU data: {}.", imu);
 }
 
 void Estimator::addPointClouds(int64_t timestamp, const std::vector<RawPointCloud::Ptr> &raw_point_clouds) {

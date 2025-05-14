@@ -19,7 +19,10 @@ add_library(${PROJECT_NAME} SHARED
     src/preprocessor.cpp
     src/base/lidar_frame.cpp
     src/base/lidar_frame_bundle.cpp
+    src/init/initializer_base.cpp
+    src/init/static_initializer.cpp
     src/fusion/eskf.cpp
+    src/fusion/ins_helper.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

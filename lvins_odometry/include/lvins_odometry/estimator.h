@@ -8,6 +8,7 @@
 #include "lvins_odometry/base/lidar_frame_bundle.h"
 #include "lvins_odometry/drawer_base.h"
 #include "lvins_odometry/fusion/eskf.h"
+#include "lvins_odometry/init/initializer_base.h"
 #include "lvins_odometry/preprocessor.h"
 
 namespace lvins {
@@ -69,11 +70,12 @@ public:
 
 private:
     // 系统
-    LidarRig::sPtr lidar_rig_;        ///< 激光雷达组
-    CameraRig::sPtr camera_rig_;      ///< 相机组
-    DrawerBase::uPtr drawer_;         ///< 绘制器
-    Preprocessor::uPtr preprocessor_; ///< 预处理器
-    ESKF::uPtr eskf_;                 ///< 扩展卡尔曼滤波器
+    LidarRig::sPtr lidar_rig_;          ///< 激光雷达组
+    CameraRig::sPtr camera_rig_;        ///< 相机组
+    DrawerBase::uPtr drawer_;           ///< 绘制器
+    Preprocessor::uPtr preprocessor_;   ///< 预处理器
+    ESKF::uPtr eskf_;                   ///< 扩展卡尔曼滤波器
+    InitializerBase::uPtr initializer_; ///< 初始化器
 
     EstimatorStatus status_{EstimatorStatus::INITIALIZING}; ///< 估计器状态
     std::atomic<size_t> reset_count_{0};                    ///< 重置次数

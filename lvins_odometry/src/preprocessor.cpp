@@ -30,6 +30,7 @@ RawPointCloud::Ptr Preprocessor::process(const RawPointCloud::ConstPtr &point_cl
     // 自适应体素滤波
     ret = adaptiveVoxelGridSample(ret, voxel_grid_size_, min_voxel_size_, max_voxel_size_, desire_point_cloud_size_,
                                   &voxel_grid_size_);
+    LVINS_DEBUG("Adaptive voxel filter grid size: {:.2f}", voxel_grid_size_);
 
     return ret;
 }
