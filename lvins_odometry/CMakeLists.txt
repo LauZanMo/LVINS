@@ -22,6 +22,8 @@ add_library(${PROJECT_NAME} SHARED
     src/init/initializer_base.cpp
     src/init/static_initializer.cpp
     src/fusion/eskf.cpp
+    src/fusion/update_task.cpp
+    src/fusion/iterative_update_task.cpp
     src/fusion/ins_helper.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC

@@ -37,8 +37,10 @@ void ESKF::reset() {
     imu_buffer_.clear();
     update_task_buffer_.clear();
     iterative_update_task_buffer_.clear();
-    update_task_           = {-1, nullptr};
-    iterative_update_task_ = {-1, nullptr};
+    exec_update_tasks_.clear();
+    exec_iterative_update_tasks_.clear();
+    update_task_.reset();
+    iterative_update_task_.reset();
 }
 
 /**
@@ -91,29 +93,31 @@ void ESKF::initialize(const NavStates &states, const Imus &imus) {
  * @details 从缓冲区中循环弹出任务并执行，直到任务时间戳晚于当前状态或缓冲区为空
  * @tparam Task 任务类型
  * @tparam TaskBuffer 任务缓冲区类型
- * @tparam ExecuteFunc 执行函数类型
+ * @tparam ExecTasks 已执行任务集合类型
+ * @tparam ExecFunc 执行函数类型
  * @param state0 上一状态
  * @param state1 当前状态
- * @param current_task 当前任务
+ * @param task 当前任务
  * @param task_buffer 任务缓冲区
+ * @param exec_tasks 已执行任务集合
  * @param exec_func 执行函数
  */
-template<typename Task, typename TaskBuffer, typename ExecuteFunc>
-bool executeLoop(const NavState &state0, const NavState &state1, Task &current_task, TaskBuffer &task_buffer,
-                 const ExecuteFunc &exec_func) {
+template<typename Task, typename TaskBuffer, typename ExecTasks, typename ExecFunc>
+bool executeLoop(const NavState &state0, const NavState &state1, Task &task, TaskBuffer &task_buffer,
+                 ExecTasks &exec_tasks, const ExecFunc &exec_func) {
     bool exec_flag = false;
     while (true) {
         // 任务在当前状态区间则执行，晚于当前状态则退出
-        const auto &[timestamp, task_func] = current_task;
-        if (timestamp > state0.timestamp && timestamp <= state1.timestamp) {
-            exec_func(task_func);
+        if (task->timestamp() > state0.timestamp && task->timestamp() <= state1.timestamp) {
+            exec_func(task);
             exec_flag = true;
-        } else if (timestamp > state1.timestamp) {
+            exec_tasks.push_back(task);
+        } else if (task->timestamp() > state1.timestamp) {
             break;
         }
 
         // 尝试弹出下一个任务，失败则退出
-        if (!task_buffer.tryPop(current_task))
+        if (!task_buffer.tryPop(task))
             break;
     }
     return exec_flag;
@@ -169,37 +173,49 @@ bool ESKF::propagate(const Imu &imu) {
             P_ = F * P_ * F.transpose() + Q_;
 
             // 更新
-            update_flag |=
-                    executeLoop(state0, state1, update_task_, update_task_buffer_, [this](const ObserveFunc &func) {
-                        update(func);
-                    });
+            update_flag |= executeLoop(state0, state1, update_task_, update_task_buffer_, exec_update_tasks_,
+                                       [this](const UpdateTaskPtr &task) {
+                                           update(task);
+                                       });
 
             // 迭代更新
             update_flag |= executeLoop(state0, state1, iterative_update_task_, iterative_update_task_buffer_,
-                                       [this](const IterativeObserveFunc &func) {
-                                           update(func);
+                                       exec_iterative_update_tasks_, [this](const iUpdateTaskPtr &task) {
+                                           update(task);
                                        });
 
-            // 弹出缓冲区最老数据，若执行了更新函数，则重新积分并设置更新状态
+            // 弹出缓冲区最老数据
             imu_buffer_.pop_front();
             state_buffer_.pop_front();
+
+            // 若执行了更新函数，则重新积分、设置更新状态并做结尾处理
             if (update_flag) {
                 repropagate();
                 update_state_ = state_buffer_.front();
+
+                // 结尾处理
+                for (const auto &task: exec_update_tasks_) {
+                    task->finalize(update_state_, T_bs_);
+                }
+                for (const auto &task: exec_iterative_update_tasks_) {
+                    task->finalize(update_state_, T_bs_);
+                }
+                exec_update_tasks_.clear();
+                exec_iterative_update_tasks_.clear();
             }
         }
         return update_flag;
     }
 }
 
-void ESKF::addUpdateTask(int64_t timestamp, const ObserveFunc &obs) {
-    LVINS_CHECK(obs != nullptr, "Update function should not be nullptr!");
-    update_task_buffer_.push({timestamp, obs});
+void ESKF::addUpdateTask(const UpdateTaskPtr &task) {
+    LVINS_CHECK(task, "Task should not be nullptr!");
+    update_task_buffer_.push(task);
 }
 
-void ESKF::addUpdateTask(int64_t timestamp, const IterativeObserveFunc &obs) {
-    LVINS_CHECK(obs != nullptr, "Update function should not be nullptr!");
-    iterative_update_task_buffer_.push({timestamp, obs});
+void ESKF::addUpdateTask(const iUpdateTaskPtr &task) {
+    LVINS_CHECK(task, "Task should not be nullptr!");
+    iterative_update_task_buffer_.push(task);
 }
 
 const NavState &ESKF::predictState() const {
@@ -223,11 +239,11 @@ std::string ESKF::print() const {
                         static_cast<double>(buffer_len_) * 1e-9, max_iterations_, iteration_quit_eps_, dim_);
 }
 
-void ESKF::update(const ObserveFunc &obs) {
+void ESKF::update(const UpdateTaskPtr &task) {
     // 计算观测量
     MatXf H, V;
     VecXf r;
-    obs(noise_params_, dim_, state_buffer_[1], T_bs_, H, V, r);
+    task->observe(noise_params_, dim_, state_buffer_[1], T_bs_, H, V, r);
 
     // 计算卡尔曼增益和残差
     const MatXf K           = P_ * H.transpose() * (H * P_ * H.transpose() + V).inverse();
@@ -243,7 +259,7 @@ void ESKF::update(const ObserveFunc &obs) {
     P_ = projectCovariance(delta_state.segment<3>(O_Q), q_bs_err);
 }
 
-void ESKF::update(const IterativeObserveFunc &obs) {
+void ESKF::update(const iUpdateTaskPtr &task) {
     // 记录初值
     const auto &state     = state_buffer_[1];
     const SO3f q_wb_begin = state.T.so3();
@@ -258,7 +274,7 @@ void ESKF::update(const IterativeObserveFunc &obs) {
     MatXf Pk, Qk;
     for (size_t iter = 0; iter < max_iterations_; ++iter) {
         // 计算观测量
-        obs(noise_params_, dim_, state, T_bs_, Ht_Vinv_H, Ht_Vinv_r);
+        task->observe(noise_params_, dim_, state, T_bs_, Ht_Vinv_H, Ht_Vinv_r);
 
         // 投影此次迭代的误差协方差矩阵
         const Vec3f q_wb_err = (state.T.so3().inverse() * q_wb_begin).log();

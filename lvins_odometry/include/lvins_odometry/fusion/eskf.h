@@ -5,8 +5,34 @@
 #include "lvins_common/noise_parameters.h"
 #include "lvins_common/sensor/imu.h"
 #include "lvins_common/yaml/yaml_serialization.h"
+#include "lvins_odometry/fusion/iterative_update_task.h"
+#include "lvins_odometry/fusion/update_task.h"
 
 namespace lvins {
+
+/**
+ * @brief 任务指针比较器
+ * @tparam T 任务指针类型
+ * @note 该比较器主要用于任务缓冲区的排序，以实现队首的任务时间戳最小
+ */
+template<typename T = void>
+struct TaskPtrGreater {
+    template<typename U = T, std::enable_if_t<!std::is_same_v<U, void>, int> = 0>
+    bool operator()(const U &lhs, const U &rhs) const {
+        return *lhs > *rhs;
+    }
+};
+
+/**
+ * @brief 特化void类型
+ */
+template<>
+struct TaskPtrGreater<void> {
+    template<typename U>
+    bool operator()(const U &lhs, const U &rhs) const {
+        return *lhs > *rhs;
+    }
+};
 
 /**
  * @brief 扩展卡尔曼滤波器（ESKF）类
@@ -17,13 +43,9 @@ namespace lvins {
  */
 class ESKF {
 public:
-    using uPtr = std::unique_ptr<ESKF>;
-    using ObserveFunc =
-            std::function<void(const NoiseParameters::sConstPtr &noise_params, long dim, const NavState &state,
-                               const std::vector<SE3f> &T_bs, MatXf &H, MatXf &V, VecXf &r)>;
-    using IterativeObserveFunc =
-            std::function<void(const NoiseParameters::sConstPtr &noise_params, long dim, const NavState &state,
-                               const std::vector<SE3f> &T_bs, MatXf &Ht_Vinv_H, VecXf &Ht_Vinv_r)>;
+    using uPtr           = std::unique_ptr<ESKF>;
+    using UpdateTaskPtr  = eskf::UpdateTask::sPtr;
+    using iUpdateTaskPtr = eskf::IterativeUpdateTask::sPtr;
 
     /**
      * @brief 构造函数
@@ -67,17 +89,15 @@ public:
 
     /**
      * @brief 添加单次更新任务
-     * @param timestamp 更新函数时间戳（ns）
-     * @param obs 观测函数
+     * @param task 单次更新任务
      */
-    void addUpdateTask(int64_t timestamp, const ObserveFunc &obs);
+    void addUpdateTask(const UpdateTaskPtr &task);
 
     /**
      * @brief 添加迭代更新任务
-     * @param timestamp 更新函数时间戳（ns）
-     * @param obs 观测函数
+     * @param task 迭代更新任务
      */
-    void addUpdateTask(int64_t timestamp, const IterativeObserveFunc &obs);
+    void addUpdateTask(const iUpdateTaskPtr &task);
 
     /**
      * @brief 获取预测状态
@@ -114,32 +134,17 @@ public:
     static constexpr long O_EXT_Q = O_EXT_P + 3;
 
 private:
-    using UpdateTask          = std::pair<int64_t, ObserveFunc>;
-    using IterativeUpdateTask = std::pair<int64_t, IterativeObserveFunc>;
-
-    /**
-     * @brief 任务比较器
-     * @tparam T 任务类型
-     * @note 该比较器主要用于任务缓冲区的排序，以实现队首的任务时间戳最小
-     */
-    template<typename T>
-    struct TaskGreater {
-        bool operator()(const T &lhs, const T &rhs) const {
-            return lhs.first > rhs.first;
-        }
-    };
-
     /**
      * @brief 单次更新
-     * @param obs 观测函数
+     * @param task 单次更新任务
      */
-    void update(const ObserveFunc &obs);
+    void update(const UpdateTaskPtr &task);
 
     /**
      * @brief 迭代更新
-     * @param obs 观测函数
+     * @param task 迭代更新任务
      */
-    void update(const IterativeObserveFunc &obs);
+    void update(const iUpdateTaskPtr &task);
 
     /**
      * @brief 更新名义状态
@@ -172,12 +177,12 @@ private:
     NavStateBuffer state_buffer_; ///< 状态数据缓冲区
     ImuBuffer imu_buffer_;        ///< IMU数据缓冲区
 
-    AsyncPriorityQueue<UpdateTask, TaskGreater<UpdateTask>> update_task_buffer_; ///< 更新任务缓冲区
-    AsyncPriorityQueue<IterativeUpdateTask, TaskGreater<IterativeUpdateTask>>
-            iterative_update_task_buffer_; ///< 迭代更新任务缓冲区
-
-    UpdateTask update_task_{-1, nullptr};                    ///< 更新任务
-    IterativeUpdateTask iterative_update_task_{-1, nullptr}; ///< 迭代更新任务
+    UpdateTaskPtr update_task_;                                                         ///< 更新任务
+    iUpdateTaskPtr iterative_update_task_;                                              ///< 迭代更新任务
+    AsyncPriorityQueue<UpdateTaskPtr, TaskPtrGreater<>> update_task_buffer_;            ///< 更新任务缓冲区
+    AsyncPriorityQueue<iUpdateTaskPtr, TaskPtrGreater<>> iterative_update_task_buffer_; ///< 迭代更新任务缓冲区
+    std::vector<UpdateTaskPtr> exec_update_tasks_;                                      ///< 已执行的更新任务集合
+    std::vector<iUpdateTaskPtr> exec_iterative_update_tasks_;                           ///< 已执行的更新任务集合
 
     NoiseParameters::sConstPtr noise_params_; ///< 噪声参数
     int64_t buffer_len_;                      ///< 缓冲区长度（ns）
