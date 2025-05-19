@@ -3,8 +3,8 @@
 
 namespace lvins {
 
-NearestNeighborSearcher::sPtr NearestNeighborSearcher::loadFromYaml(const YAML::Node &config) {
-    return YAML::get<NearestNeighborSearcher::sPtr>(config, "");
+NearestNeighborSearcher::Ptr NearestNeighborSearcher::loadFromYaml(const YAML::Node &config) {
+    return YAML::get<NearestNeighborSearcher::Ptr>(config, "");
 }
 
 YAML::Node NearestNeighborSearcher::writeToYaml() const {

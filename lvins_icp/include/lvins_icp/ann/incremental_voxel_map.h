@@ -90,8 +90,8 @@ public:
      * @param max_sq_dist 指定点与近邻点的最大距离平方
      * @return 实际找到的最近邻数量
      */
-    [[nodiscard]] size_t knnSearch(const Vec3f &point, size_t k, std::vector<size_t> *k_indices,
-                                   std::vector<Float> *k_sq_dists, Float max_sq_dist) const override;
+    [[nodiscard]] size_t knnSearch(const Vec3f &point, size_t k, std::vector<size_t> &k_indices,
+                                   std::vector<Float> &k_sq_dists, Float max_sq_dist) const override;
 
     /**
      * @brief 检测点集是否为空

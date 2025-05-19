@@ -112,8 +112,8 @@ void IncrementalVoxelMap<VoxelContent>::insert(const PointCloud &point_cloud, co
 }
 
 template<typename VoxelContent>
-size_t IncrementalVoxelMap<VoxelContent>::knnSearch(const Vec3f &point, size_t k, std::vector<size_t> *k_indices,
-                                                    std::vector<Float> *k_sq_dists, Float max_sq_dist) const {
+size_t IncrementalVoxelMap<VoxelContent>::knnSearch(const Vec3f &point, size_t k, std::vector<size_t> &k_indices,
+                                                    std::vector<Float> &k_sq_dists, Float max_sq_dist) const {
     // 获取体素坐标中心
     const Vec3i center = fastFloor(point * inv_leaf_size_);
 

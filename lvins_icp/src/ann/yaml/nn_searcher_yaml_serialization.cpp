@@ -18,17 +18,17 @@ Node convert<NearestNeighborSearcher>::encode(const NearestNeighborSearcher &nn_
 
 bool convert<NearestNeighborSearcher>::decode(const Node & /*node*/, NearestNeighborSearcher & /*nn_searcher*/) {
     LVINS_ERROR("Unsupported action: Directly decode with NearestNeighborSearcher object, try to decode with "
-                "NearestNeighborSearcher::sPtr!");
+                "NearestNeighborSearcher::Ptr!");
     return false;
 }
 
-Node convert<std::shared_ptr<NearestNeighborSearcher>>::encode(const NearestNeighborSearcher::sPtr &nn_searcher) {
+Node convert<std::shared_ptr<NearestNeighborSearcher>>::encode(const NearestNeighborSearcher::Ptr &nn_searcher) {
     LVINS_CHECK(nullptr != nn_searcher, "The nearest neighbor searcher is nullptr!");
     return convert<NearestNeighborSearcher>::encode(*nn_searcher);
 }
 
 bool convert<std::shared_ptr<NearestNeighborSearcher>>::decode(const Node &node,
-                                                               NearestNeighborSearcher::sPtr &nn_searcher) {
+                                                               NearestNeighborSearcher::Ptr &nn_searcher) {
     LVINS_CHECK(node.IsMap(), "Unable to parse the nearest neighbor searcher because the node is not a map!");
     const auto type = YAML::get<std::string>(node, "type");
 

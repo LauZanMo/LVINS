@@ -12,13 +12,16 @@ namespace lvins {
  */
 class NearestNeighborSearcher {
 public:
-    using sPtr      = std::shared_ptr<NearestNeighborSearcher>;
-    using sConstPtr = std::shared_ptr<const NearestNeighborSearcher>;
+    using Ptr = std::shared_ptr<NearestNeighborSearcher>;
 
     /**
-     * @brief 默认构造函数与析构函数
+     * @brief 默认构造函数
      */
-    NearestNeighborSearcher()          = default;
+    NearestNeighborSearcher() = default;
+
+    /**
+     * @brief 默认析构函数
+     */
     virtual ~NearestNeighborSearcher() = default;
 
     /**
@@ -27,7 +30,7 @@ public:
      * @return 加载最近邻搜索器
      * @warning 如果加载失败，则返回空指针
      */
-    static sPtr loadFromYaml(const YAML::Node &config);
+    static Ptr loadFromYaml(const YAML::Node &config);
 
     /**
      * @brief 将最近邻搜索器参数写入YAML节点
@@ -51,8 +54,8 @@ public:
      * @param max_sq_dist 指定点与近邻点的最大距离平方
      * @return 实际找到的最近邻数量
      */
-    [[nodiscard]] virtual size_t knnSearch(const Vec3f &point, size_t k, std::vector<size_t> *k_indices,
-                                           std::vector<Float> *k_sq_dists, Float max_sq_dist) const = 0;
+    [[nodiscard]] virtual size_t knnSearch(const Vec3f &point, size_t k, std::vector<size_t> &k_indices,
+                                           std::vector<Float> &k_sq_dists, Float max_sq_dist) const = 0;
 
     /**
      * @brief 检测点集是否为空
