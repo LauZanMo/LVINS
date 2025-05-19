@@ -13,8 +13,7 @@ namespace lvins {
  */
 class LidarGeometryBase {
 public:
-    using sPtr      = std::shared_ptr<LidarGeometryBase>;
-    using sConstPtr = std::shared_ptr<const LidarGeometryBase>;
+    using Ptr = std::shared_ptr<LidarGeometryBase>;
 
     /**
      * @brief 构造函数
@@ -26,23 +25,23 @@ public:
     LidarGeometryBase(std::string label, uint32_t scan_line, Float nearest_distance, Float farthest_distance);
 
     /**
+     * @brief 默认析构函数
+     */
+    ~LidarGeometryBase() = default;
+
+    /**
      * @brief 从YAML配置文件中加载雷达
      * @param config_file YAML配置文件路径（可以是相对路径）
      * @return 加载雷达的指针
      * @warning 如果加载失败，则返回空指针
      */
-    static sPtr loadFromYaml(const std::string &config_file);
+    static Ptr loadFromYaml(const std::string &config_file);
 
     /**
      * @brief 将雷达参数写入YAML配置文件
      * @param config_file YAML配置文件路径（可以是相对路径）
      */
     void writeToYaml(const std::string &config_file) const;
-
-    /**
-     * @brief 默认析构函数
-     */
-    ~LidarGeometryBase() = default;
 
     /**
      * @brief 获取雷达id

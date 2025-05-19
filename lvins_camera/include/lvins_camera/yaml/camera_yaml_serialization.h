@@ -44,18 +44,18 @@ struct convert<CameraGeometryBase> {
  * @brief YAML序列化中CameraGeometryBase类指针的实现
  * @details 该类实现了yaml-cpp库中CameraGeometryBase类指针的序列化与反序列化的接口<br/>
  *          用法示例：<br/>
- *          1. 读取（反序列化）：auto cam = YAML::get<CameraGeometryBase::sPtr>(node, "cam0");<br/>
+ *          1. 读取（反序列化）：auto cam = YAML::get<CameraGeometryBase::Ptr>(node, "cam0");<br/>
  *          2. 写入（序列化）：node["cam0"] = cam;<br/>
  *          详细实例可查看CameraGeometryBase::loadFromYaml的实现
  */
 template<>
-struct convert<CameraGeometryBase::sPtr> {
+struct convert<CameraGeometryBase::Ptr> {
     /**
      * @brief 序列化CameraGeometryBase类指针
      * @param camera CameraGeometryBase的实例指针
      * @return 是否序列化成功
      */
-    static Node encode(const CameraGeometryBase::sPtr &camera);
+    static Node encode(const CameraGeometryBase::Ptr &camera);
 
     /**
      * @brief 反序列化CameraGeometryBase类指针
@@ -63,7 +63,7 @@ struct convert<CameraGeometryBase::sPtr> {
      * @param camera CameraGeometryBase的实例指针
      * @return 是否反序列化成功
      */
-    static bool decode(const Node &node, CameraGeometryBase::sPtr &camera);
+    static bool decode(const Node &node, CameraGeometryBase::Ptr &camera);
 };
 
 namespace internal {

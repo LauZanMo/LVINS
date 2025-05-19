@@ -14,13 +14,16 @@ namespace lvins {
  */
 class CameraGeometryBase {
 public:
-    using sPtr      = std::shared_ptr<CameraGeometryBase>;
-    using sConstPtr = std::shared_ptr<const CameraGeometryBase>;
+    using Ptr = std::shared_ptr<CameraGeometryBase>;
 
     /**
-     * @brief 默认构造函数与析构函数
+     * @brief 默认构造函数
      */
-    CameraGeometryBase()          = default;
+    CameraGeometryBase() = default;
+
+    /**
+     * @brief 默认析构函数
+     */
     virtual ~CameraGeometryBase() = default;
 
     /**
@@ -29,7 +32,7 @@ public:
      * @return 加载相机
      * @warning 如果加载失败，则返回空指针
      */
-    static sPtr loadFromYaml(const std::string &config_file);
+    static Ptr loadFromYaml(const std::string &config_file);
 
     /**
      * @brief 将相机参数写入YAML配置文件

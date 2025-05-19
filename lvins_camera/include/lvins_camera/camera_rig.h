@@ -12,7 +12,7 @@ namespace lvins {
  */
 class CameraRig : NonCopyable {
 public:
-    using sPtr = std::shared_ptr<CameraRig>;
+    using Ptr = std::shared_ptr<CameraRig>;
 
     /**
      * @brief 构造函数
@@ -21,7 +21,7 @@ public:
      * @param T_bs_vec 相机组中每个相机的外参
      * @warning 输入的相机实例和外参向量的长度需要一致
      */
-    CameraRig(std::string label, const std::vector<CameraGeometryBase::sPtr> &cameras, std::vector<SE3f> T_bs_vec);
+    CameraRig(std::string label, const std::vector<CameraGeometryBase::Ptr> &cameras, std::vector<SE3f> T_bs_vec);
 
     /**
      * @brief 析构函数
@@ -34,7 +34,7 @@ public:
      * @return 加载相机组
      * @warning 如果加载失败，则返回空指针
      */
-    static sPtr loadFromYaml(const std::string &config_file);
+    static Ptr loadFromYaml(const std::string &config_file);
 
     /**
      * @brief 将相机组参数写入YAML配置文件
@@ -53,7 +53,7 @@ public:
      * @param idx 相机索引
      * @return 相机实例
      */
-    [[nodiscard]] const CameraGeometryBase::sPtr &camera(size_t idx) const;
+    [[nodiscard]] const CameraGeometryBase &camera(size_t idx) const;
 
     /**
      * @brief 获取相机组中实例的总数
@@ -95,7 +95,7 @@ public:
 
 private:
     std::string label_;
-    std::vector<CameraGeometryBase::sPtr> cameras_;
+    std::vector<CameraGeometryBase::Ptr> cameras_;
     std::vector<SE3f> T_bs_vec_;
 };
 

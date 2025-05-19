@@ -11,7 +11,7 @@ namespace lvins {
  */
 class TimeWheel {
 public:
-    using sPtr = std::shared_ptr<TimeWheel>;
+    using Ptr = std::shared_ptr<TimeWheel>;
 
     /**
      * @brief 构造函数
@@ -36,7 +36,7 @@ public:
      * @brief 添加时间任务
      * @param task 时间任务
      */
-    void addTimeTask(const TimeTask::sPtr &task);
+    void addTimeTask(const TimeTask::Ptr &task);
 
     /**
      * @brief 获取当前槽对应的时间（ms）
@@ -53,7 +53,7 @@ public:
      * @brief 获取当前槽的时间任务并清空当前槽
      * @return 当前槽的时间任务列表
      */
-    std::list<TimeTask::sPtr> getAndClearCurrentSlot();
+    std::list<TimeTask::Ptr> getAndClearCurrentSlot();
 
     /**
      * @brief 获取当前时间轮的刻度数
@@ -70,7 +70,7 @@ public:
 private:
     uint32_t current_index_{0}; ///< 当前时间轮槽索引
 
-    std::vector<std::list<TimeTask::sPtr>> slots_; ///< 时间轮槽，刻度与槽一一对应，槽中存储时间任务
+    std::vector<std::list<TimeTask::Ptr>> slots_; ///< 时间轮槽，刻度与槽一一对应，槽中存储时间任务
 
     TimeWheel *next_wheel_{nullptr}; ///< 下一级时间轮（更小尺度）
     TimeWheel *last_wheel_{nullptr}; ///< 上一级时间轮（更大尺度）

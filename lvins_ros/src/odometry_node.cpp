@@ -59,7 +59,7 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
     const auto config = YAML::load(config_file);
 
     // 初始化估计器
-    DrawerBase::uPtr drawer = std::make_unique<DrawerRviz>(config["drawer"], *this);
+    DrawerBase::Ptr drawer = std::make_unique<DrawerRviz>(config["drawer"], *this);
     estimator_              = std::make_unique<Estimator>(config, std::move(drawer));
 
     // 设置服务质量（QoS）

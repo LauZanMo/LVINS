@@ -31,7 +31,7 @@ void DrawerBase::reset() {
     reset_ = true;
 }
 
-void DrawerBase::updateLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle) {
+void DrawerBase::updateLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::Ptr &bundle) {
     draw_task_buffer_.push([this, timestamp, bundle] {
         drawLidarFrameBundle(timestamp, bundle);
     });

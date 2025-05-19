@@ -10,7 +10,7 @@ namespace lvins {
  */
 class TimeTask {
 public:
-    using sPtr     = std::shared_ptr<TimeTask>;
+    using Ptr      = std::shared_ptr<TimeTask>;
     using Callback = std::function<void()>;
 
     /**

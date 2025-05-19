@@ -12,8 +12,7 @@ namespace lvins {
  */
 class LidarFrame : public NonCopyable {
 public:
-    using sPtr      = std::shared_ptr<LidarFrame>;
-    using sConstPtr = std::shared_ptr<const LidarFrame>;
+    using Ptr = std::shared_ptr<LidarFrame>;
 
     /**
      * @brief 构造函数
@@ -21,7 +20,7 @@ public:
      * @param lidar 帧所属的雷达
      * @param raw_point_cloud 帧原始点云
      */
-    LidarFrame(int64_t timestamp, const LidarGeometryBase::sPtr &lidar, RawPointCloud::Ptr raw_point_cloud);
+    LidarFrame(int64_t timestamp, const LidarGeometryBase &lidar, RawPointCloud::Ptr raw_point_cloud);
 
     /**
      * @brief 默认析构函数
@@ -57,7 +56,7 @@ public:
      * @brief 获取帧所属的雷达
      * @return 帧所属的雷达
      */
-    [[nodiscard]] const LidarGeometryBase::sConstPtr &lidar() const;
+    [[nodiscard]] const LidarGeometryBase &lidar() const;
 
     /**
      * @brief 获取帧位姿
@@ -89,25 +88,25 @@ public:
      * @brief 获取帧原始点云
      * @return 帧原始点云
      */
-    [[nodiscard]] RawPointCloud::Ptr &rawPointCloud();
+    [[nodiscard]] RawPointCloud &rawPointCloud();
 
     /**
      * @brief 获取帧原始点云
      * @return 帧原始点云
      */
-    [[nodiscard]] RawPointCloud::ConstPtr rawPointCloud() const;
+    [[nodiscard]] const RawPointCloud &rawPointCloud() const;
 
     /**
      * @brief 获取帧点云
      * @return 帧点云
      */
-    [[nodiscard]] PointCloud::Ptr &pointCloud();
+    [[nodiscard]] PointCloud &pointCloud();
 
     /**
      * @brief 获取帧点云
      * @return 帧点云
      */
-    [[nodiscard]] PointCloud::ConstPtr pointCloud() const;
+    [[nodiscard]] const PointCloud &pointCloud() const;
 
     /**
      * @brief 打印帧信息
@@ -120,7 +119,7 @@ private:
     int64_t timestamp_;                  ///< 时间戳（ns）
     long id_;                            ///< 帧id（历史唯一）
     long bundle_id_{-1};                 ///< 帧束id（用于多目，历史唯一）
-    LidarGeometryBase::sConstPtr lidar_; ///< 帧所属的雷达
+    const LidarGeometryBase &lidar_;     ///< 帧所属的雷达
     SE3f T_wf_;                          ///< 世界坐标系到帧坐标系的变换
     SE3f T_bs_;                          ///< 帧所属传感器外参
     RawPointCloud::Ptr raw_point_cloud_; ///< 原始点云

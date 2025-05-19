@@ -2,7 +2,7 @@
 
 namespace lvins {
 
-Estimator::Estimator(const YAML::Node &config, DrawerBase::uPtr drawer) : drawer_(std::move(drawer)) {
+Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_(std::move(drawer)) {
     LVINS_INFO("Starting estimator...");
 
 #if LVINS_LICENSE_CHECK
@@ -21,8 +21,8 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::uPtr drawer) : drawer
     Vec3f g_w(0.0, 0.0, gravity_mag_);
 
     // 噪声参数
-    const auto noise_params = std::make_shared<NoiseParameters>(config["noise_params"]);
-    LVINS_INFO("Printing noise parameters:\n{}", *noise_params);
+    noise_params_ = std::make_shared<NoiseParameters>(config["noise_params"]);
+    LVINS_INFO("Printing noise parameters:\n{}", *noise_params_);
 
     // 读取雷达文件路径，并初始化雷达组
     const auto lidar_rig_file = YAML::get<std::string>(config, "lidar_rig_file");
@@ -52,7 +52,7 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::uPtr drawer) : drawer
         T_bs.insert(T_bs.end(), lidar_rig_->Tbs().begin(), lidar_rig_->Tbs().end());
     if (camera_rig_)
         T_bs.insert(T_bs.end(), camera_rig_->Tbs().begin(), camera_rig_->Tbs().end());
-    eskf_ = std::make_unique<ESKF>(config["eskf"], noise_params, g_w, T_bs);
+    eskf_ = std::make_unique<ESKF>(config["eskf"], *noise_params_, g_w, T_bs);
     LVINS_INFO("Printing ESKF parameters:\n{}", *eskf_);
 
     // 加载初始化器
@@ -110,7 +110,7 @@ void Estimator::addImu(const Imu &imu) {
         initializer_->addImu(input);
 
         // 初始化器添加雷达帧束
-        LidarFrameBundle::sPtr lidar_frame_bundle;
+        LidarFrameBundle::Ptr lidar_frame_bundle;
         while (lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
             initializer_->addLidarFrameBundle(lidar_frame_bundle);
         }
@@ -131,7 +131,7 @@ void Estimator::addImu(const Imu &imu) {
             // 更新对应updateState时间戳的帧束，并向增量地图嵌入点云
         }
 
-        LidarFrameBundle::sPtr lidar_frame_bundle;
+        LidarFrameBundle::Ptr lidar_frame_bundle;
         while (lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
             // 构建观测函数，并添加到ESKF
         }
@@ -143,14 +143,14 @@ void Estimator::addPointClouds(int64_t timestamp, const std::vector<RawPointClou
                 "The number of raw point clouds should match the number of lidars!");
 
     // 预处理点云并生成帧
-    std::vector<LidarFrame::sPtr> lidar_frames(raw_point_clouds.size());
+    std::vector<LidarFrame::Ptr> lidar_frames(raw_point_clouds.size());
     size_t icp_points = 0;
     LVINS_START_TIMER(lidar_preprocess_timer_);
     for (size_t i = 0; i < raw_point_clouds.size(); ++i) {
         auto raw_point_cloud = preprocessor_->process(raw_point_clouds[i]);
         lidar_frames[i] = std::make_shared<LidarFrame>(timestamp, lidar_rig_->lidar(i), std::move(raw_point_cloud));
         // TODO: 根据IMU数据进行点云矫正
-        icp_points += lidar_frames[i]->rawPointCloud()->size();
+        icp_points += lidar_frames[i]->rawPointCloud().size();
     }
     LVINS_STOP_TIMER(lidar_preprocess_timer_);
     LVINS_PRINT_TIMER_MS("Lidar preprocess", lidar_preprocess_timer_);

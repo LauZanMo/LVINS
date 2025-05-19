@@ -16,7 +16,7 @@ namespace lvins {
  */
 class DrawerBase : public NonCopyable {
 public:
-    using uPtr = std::unique_ptr<DrawerBase>;
+    using Ptr = std::unique_ptr<DrawerBase>;
 
     /**
      * @brief 构造函数
@@ -39,7 +39,7 @@ public:
      * @param timestamp 雷达帧束时间戳
      * @param bundle 雷达帧束
      */
-    void updateLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle);
+    void updateLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::Ptr &bundle);
 
     /**
      * @brief 更新重置次数
@@ -53,7 +53,7 @@ protected:
      * @param timestamp 雷达帧束时间戳
      * @param bundle 雷达帧束
      */
-    virtual void drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle) = 0;
+    virtual void drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::Ptr &bundle) = 0;
 
     /**
      * @brief 发布重置次数

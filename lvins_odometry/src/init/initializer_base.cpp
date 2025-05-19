@@ -6,7 +6,7 @@ namespace lvins {
 
 InitializerBase::InitializerBase(Vec3f g_w) : g_w_(std::move(g_w)) {}
 
-InitializerBase::uPtr InitializerBase::loadFromYaml(const YAML::Node &config, Vec3f g_w) {
+InitializerBase::Ptr InitializerBase::loadFromYaml(const YAML::Node &config, Vec3f g_w) {
     const auto type       = YAML::get<std::string>(config, "type");
     const auto parameters = YAML::get<VecXf>(config, "parameters");
 

@@ -30,7 +30,7 @@ private:
      * @param timestamp 雷达帧束时间戳
      * @param bundle 雷达帧束
      */
-    void drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle) override;
+    void drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::Ptr &bundle) override;
 
     /**
      * @brief 发布重置次数

@@ -15,13 +15,13 @@ LidarGeometryBase::LidarGeometryBase(std::string label, uint32_t scan_line, Floa
       farthest_dist_(farthest_distance),
       farthest_dist2_(farthest_distance * farthest_distance) {}
 
-LidarGeometryBase::sPtr LidarGeometryBase::loadFromYaml(const std::string &config_file) {
+LidarGeometryBase::Ptr LidarGeometryBase::loadFromYaml(const std::string &config_file) {
     // 检查并转换路径（如果有需要）
     LVINS_CHECK(!config_file.empty(), "config_file should not be empty!");
 
     // 根据配置文件加载雷达
     const auto node = YAML::load(path_helper::completePath(config_file));
-    return YAML::get<LidarGeometryBase::sPtr>(node, "");
+    return YAML::get<LidarGeometryBase::Ptr>(node, "");
 }
 
 void LidarGeometryBase::writeToYaml(const std::string &config_file) const {

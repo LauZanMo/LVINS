@@ -12,7 +12,7 @@ namespace lvins {
  */
 class LidarRig : public NonCopyable {
 public:
-    using sPtr = std::shared_ptr<LidarRig>;
+    using Ptr = std::shared_ptr<LidarRig>;
 
     /**
      * @brief 构造函数
@@ -21,10 +21,10 @@ public:
      * @param T_bs_vec 雷达组中每个雷达的外参
      * @warning 输入的雷达实例和外参向量的长度需要一致
      */
-    LidarRig(std::string label, const std::vector<LidarGeometryBase::sPtr> &lidars, std::vector<SE3f> T_bs_vec);
+    LidarRig(std::string label, const std::vector<LidarGeometryBase::Ptr> &lidars, std::vector<SE3f> T_bs_vec);
 
     /**
-     * @brief 析构函数
+     * @brief 默认析构函数
      */
     ~LidarRig() = default;
 
@@ -34,7 +34,7 @@ public:
      * @return 加载雷达组
      * @warning 如果加载失败，则返回空指针
      */
-    static sPtr loadFromYaml(const std::string &config_file);
+    static Ptr loadFromYaml(const std::string &config_file);
 
     /**
      * @brief 将雷达组参数写入YAML配置文件
@@ -53,7 +53,7 @@ public:
      * @param idx 雷达索引
      * @return 雷达实例
      */
-    [[nodiscard]] const LidarGeometryBase::sPtr &lidar(size_t idx) const;
+    [[nodiscard]] const LidarGeometryBase &lidar(size_t idx) const;
 
     /**
      * @brief 获取雷达组中实例的总数
@@ -95,7 +95,7 @@ public:
 
 private:
     std::string label_;
-    std::vector<LidarGeometryBase::sPtr> lidars_;
+    std::vector<LidarGeometryBase::Ptr> lidars_;
     std::vector<SE3f> T_bs_vec_;
 };
 

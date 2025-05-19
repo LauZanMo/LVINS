@@ -17,8 +17,9 @@ namespace lvins {
 template<typename T, typename Compare = std::less<T>>
 class AsyncPriorityQueue : public NonCopyable {
 public:
-    using sPtr = std::shared_ptr<AsyncPriorityQueue>;
-
+    /**
+     * @brief 默认构造函数
+     */
     AsyncPriorityQueue() = default;
 
     /**

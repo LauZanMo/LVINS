@@ -13,7 +13,7 @@ void TimeWheel::setLastWheel(TimeWheel *last) {
     last_wheel_ = last;
 }
 
-void TimeWheel::addTimeTask(const TimeTask::sPtr &task) {
+void TimeWheel::addTimeTask(const TimeTask::Ptr &task) {
     int64_t next_wheel_time = 0;
     if (next_wheel_) {
         next_wheel_time = next_wheel_->currentTime();
@@ -56,14 +56,14 @@ void TimeWheel::increase() {
     current_index_ = current_index_ % scales_;
     if (last_wheel_) {
         last_wheel_->increase();
-        const std::list<TimeTask::sPtr> slot = std::move(last_wheel_->getAndClearCurrentSlot());
+        const std::list<TimeTask::Ptr> slot = std::move(last_wheel_->getAndClearCurrentSlot());
         for (const auto &timer: slot) {
             addTimeTask(timer);
         }
     }
 }
 
-std::list<TimeTask::sPtr> TimeWheel::getAndClearCurrentSlot() {
+std::list<TimeTask::Ptr> TimeWheel::getAndClearCurrentSlot() {
     return std::move(slots_[current_index_]);
 }
 

@@ -5,8 +5,12 @@ namespace lvins {
 
 static std::atomic<long> frame_counter{0};
 
-LidarFrame::LidarFrame(int64_t timestamp, const LidarGeometryBase::sPtr &lidar, RawPointCloud::Ptr raw_point_cloud)
-    : timestamp_(timestamp), id_(frame_counter++), lidar_(lidar), raw_point_cloud_(std::move(raw_point_cloud)) {}
+LidarFrame::LidarFrame(int64_t timestamp, const LidarGeometryBase &lidar, RawPointCloud::Ptr raw_point_cloud)
+    : timestamp_(timestamp),
+      id_(frame_counter++),
+      lidar_(lidar),
+      raw_point_cloud_(std::move(raw_point_cloud)),
+      point_cloud_(std::make_shared<PointCloud>()) {}
 
 int64_t LidarFrame::timestamp() const {
     return timestamp_;
@@ -24,7 +28,7 @@ void LidarFrame::setBundleId(long bundle_id) {
     bundle_id_ = bundle_id;
 }
 
-const LidarGeometryBase::sConstPtr &LidarFrame::lidar() const {
+const LidarGeometryBase &LidarFrame::lidar() const {
     return lidar_;
 }
 
@@ -44,20 +48,20 @@ void LidarFrame::setTbs(const SE3f &T_bs) {
     T_bs_ = T_bs;
 }
 
-RawPointCloud::Ptr &LidarFrame::rawPointCloud() {
-    return raw_point_cloud_;
+RawPointCloud &LidarFrame::rawPointCloud() {
+    return *raw_point_cloud_;
 }
 
-RawPointCloud::ConstPtr LidarFrame::rawPointCloud() const {
-    return raw_point_cloud_;
+const RawPointCloud &LidarFrame::rawPointCloud() const {
+    return *raw_point_cloud_;
 }
 
-PointCloud::Ptr &LidarFrame::pointCloud() {
-    return point_cloud_;
+PointCloud &LidarFrame::pointCloud() {
+    return *point_cloud_;
 }
 
-PointCloud::ConstPtr LidarFrame::pointCloud() const {
-    return point_cloud_;
+const PointCloud &LidarFrame::pointCloud() const {
+    return *point_cloud_;
 }
 
 std::string LidarFrame::print() const {
@@ -70,7 +74,7 @@ std::string LidarFrame::print() const {
                         "  raw point cloud: {}\n"
                         "  point cloud: {}",
                         LVINS_GROUP_DIGITS(id_), LVINS_GROUP_DIGITS(timestamp_), LVINS_GROUP_DIGITS(bundle_id_),
-                        lidar_->label(), LVINS_VECTOR_FMT(T_wf_.params()), LVINS_VECTOR_FMT(T_bs_.params()),
+                        lidar_.label(), LVINS_VECTOR_FMT(T_wf_.params()), LVINS_VECTOR_FMT(T_bs_.params()),
                         *raw_point_cloud_, *point_cloud_);
 }
 

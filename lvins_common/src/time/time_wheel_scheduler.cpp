@@ -112,11 +112,11 @@ void TimeWheelScheduler::appendWheel(uint32_t scales, uint32_t scale_unit) {
     wheels_.push_back(wheel);
 }
 
-TimeWheel::sPtr &TimeWheelScheduler::greatestWheel() {
+TimeWheel::Ptr &TimeWheelScheduler::greatestWheel() {
     return wheels_.front();
 }
 
-TimeWheel::sPtr &TimeWheelScheduler::leastWheel() {
+TimeWheel::Ptr &TimeWheelScheduler::leastWheel() {
     return wheels_.back();
 }
 

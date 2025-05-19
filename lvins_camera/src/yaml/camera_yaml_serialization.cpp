@@ -38,16 +38,16 @@ Node convert<CameraGeometryBase>::encode(const CameraGeometryBase &camera) {
 
 bool convert<CameraGeometryBase>::decode(const Node & /*node*/, CameraGeometryBase & /*camera*/) {
     LVINS_ERROR("Unsupported action: Directly decode with CameraGeometryBase object, try to decode with "
-                "CameraGeometryBase::sPtr!");
+                "CameraGeometryBase::Ptr!");
     return false;
 }
 
-Node convert<CameraGeometryBase::sPtr>::encode(const CameraGeometryBase::sPtr &camera) {
+Node convert<CameraGeometryBase::Ptr>::encode(const CameraGeometryBase::Ptr &camera) {
     LVINS_CHECK(camera != nullptr, "The camera is nullptr!");
     return convert<CameraGeometryBase>::encode(*camera);
 }
 
-bool convert<CameraGeometryBase::sPtr>::decode(const Node &node, CameraGeometryBase::sPtr &camera) {
+bool convert<CameraGeometryBase::Ptr>::decode(const Node &node, CameraGeometryBase::Ptr &camera) {
     LVINS_CHECK(node.IsMap(), "Unable to parse the camera because the node is not a map!");
 
     // 加载常规参数

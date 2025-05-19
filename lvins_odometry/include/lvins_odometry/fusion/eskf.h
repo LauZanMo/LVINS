@@ -43,9 +43,9 @@ struct TaskPtrGreater<void> {
  */
 class ESKF {
 public:
-    using uPtr           = std::unique_ptr<ESKF>;
-    using UpdateTaskPtr  = eskf::UpdateTask::sPtr;
-    using iUpdateTaskPtr = eskf::IterativeUpdateTask::sPtr;
+    using Ptr            = std::unique_ptr<ESKF>;
+    using UpdateTaskPtr  = eskf::UpdateTask::Ptr;
+    using iUpdateTaskPtr = eskf::IterativeUpdateTask::Ptr;
 
     /**
      * @brief 构造函数
@@ -54,7 +54,7 @@ public:
      * @param g_w 世界坐标系下的重力向量
      * @param T_bs 外参集合
      */
-    ESKF(const YAML::Node &config, NoiseParameters::sConstPtr noise_params, Vec3f g_w, std::vector<SE3f> T_bs);
+    ESKF(const YAML::Node &config, const NoiseParameters &noise_params, Vec3f g_w, std::vector<SE3f> T_bs);
 
     /**
      * @brief 默认析构函数
@@ -184,11 +184,11 @@ private:
     std::vector<UpdateTaskPtr> exec_update_tasks_;                                      ///< 已执行的更新任务集合
     std::vector<iUpdateTaskPtr> exec_iterative_update_tasks_;                           ///< 已执行的更新任务集合
 
-    NoiseParameters::sConstPtr noise_params_; ///< 噪声参数
-    int64_t buffer_len_;                      ///< 缓冲区长度（ns）
-    size_t max_iterations_;                   ///< 最大迭代次数
-    Float iteration_quit_eps_;                ///< 迭代退出阈值
-    long dim_;                                ///< 状态维度（p v q bg ba g_w ext_p ext_q）
+    const NoiseParameters &noise_params_; ///< 噪声参数
+    int64_t buffer_len_;                  ///< 缓冲区长度（ns）
+    size_t max_iterations_;               ///< 最大迭代次数
+    Float iteration_quit_eps_;            ///< 迭代退出阈值
+    long dim_;                            ///< 状态维度（p v q bg ba g_w ext_p ext_q）
 };
 
 } // namespace lvins

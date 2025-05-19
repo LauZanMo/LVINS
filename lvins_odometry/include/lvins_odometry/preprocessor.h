@@ -13,7 +13,7 @@ namespace lvins {
  */
 class Preprocessor : public NonCopyable {
 public:
-    using uPtr = std::unique_ptr<Preprocessor>;
+    using Ptr = std::unique_ptr<Preprocessor>;
 
     /**
      * @brief 构造函数

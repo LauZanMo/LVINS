@@ -34,7 +34,7 @@ public:
      * @param config YAML配置节点
      * @param drawer 绘制器
      */
-    Estimator(const YAML::Node &config, DrawerBase::uPtr drawer);
+    Estimator(const YAML::Node &config, DrawerBase::Ptr drawer);
 
     /**
      * @brief 析构函数
@@ -70,27 +70,28 @@ public:
 
 private:
     // 系统
-    LidarRig::sPtr lidar_rig_;          ///< 激光雷达组
-    CameraRig::sPtr camera_rig_;        ///< 相机组
-    DrawerBase::uPtr drawer_;           ///< 绘制器
-    Preprocessor::uPtr preprocessor_;   ///< 预处理器
-    ESKF::uPtr eskf_;                   ///< 扩展卡尔曼滤波器
-    InitializerBase::uPtr initializer_; ///< 初始化器
+    LidarRig::Ptr lidar_rig_;          ///< 激光雷达组
+    CameraRig::Ptr camera_rig_;        ///< 相机组
+    DrawerBase::Ptr drawer_;           ///< 绘制器
+    Preprocessor::Ptr preprocessor_;   ///< 预处理器
+    ESKF::Ptr eskf_;                   ///< 扩展卡尔曼滤波器
+    InitializerBase::Ptr initializer_; ///< 初始化器
 
     EstimatorStatus status_{EstimatorStatus::INITIALIZING}; ///< 估计器状态
     std::atomic<size_t> reset_count_{0};                    ///< 重置次数
 
     // 缓冲区
-    AsyncQueue<LidarFrameBundle::sPtr> lidar_frame_bundle_buffer_; ///< 雷达帧束缓冲区
+    AsyncQueue<LidarFrameBundle::Ptr> lidar_frame_bundle_buffer_; ///< 雷达帧束缓冲区
 
     // 计时器
-    TimeWheelScheduler::sPtr wheel_scheduler_;   ///< 时间轮调度器
+    TimeWheelScheduler::Ptr wheel_scheduler_;    ///< 时间轮调度器
     LVINS_DECLARE_TIMER(lidar_preprocess_timer_) ///< 雷达预处理计时器
 
     // 参数
-    bool acc_in_g_;         ///< 加速度是否以g为单位
-    Float gravity_mag_;     ///< 重力向量模长
-    size_t min_icp_points_; ///< 进行ICP的最小点数
+    bool acc_in_g_;                     ///< 加速度是否以g为单位
+    Float gravity_mag_;                 ///< 重力向量模长
+    NoiseParameters::Ptr noise_params_; ///< 噪声参数
+    size_t min_icp_points_;             ///< 进行ICP的最小点数
 };
 
 } // namespace lvins

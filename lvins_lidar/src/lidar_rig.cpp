@@ -6,18 +6,18 @@
 
 namespace lvins {
 
-LidarRig::LidarRig(std::string label, const std::vector<LidarGeometryBase::sPtr> &lidars, std::vector<SE3f> T_bs_vec)
+LidarRig::LidarRig(std::string label, const std::vector<LidarGeometryBase::Ptr> &lidars, std::vector<SE3f> T_bs_vec)
     : label_(std::move(label)), lidars_(lidars), T_bs_vec_(std::move(T_bs_vec)) {
     LVINS_CHECK(lidars_.size() == T_bs_vec_.size(), "Lidars size should be equal to T_bs_vec size!");
 }
 
-LidarRig::sPtr LidarRig::loadFromYaml(const std::string &config_file) {
+LidarRig::Ptr LidarRig::loadFromYaml(const std::string &config_file) {
     // 检查并转换路径（如果有需要）
     LVINS_CHECK(!config_file.empty(), "config_file should not be empty!");
 
     // 根据配置文件加载雷达
     const auto node = YAML::load(path_helper::completePath(config_file));
-    return YAML::get<LidarRig::sPtr>(node, "");
+    return YAML::get<LidarRig::Ptr>(node, "");
 }
 
 void LidarRig::writeToYaml(const std::string &config_file) const {
@@ -34,9 +34,9 @@ const std::string &LidarRig::label() const {
     return label_;
 }
 
-const LidarGeometryBase::sPtr &LidarRig::lidar(size_t idx) const {
+const LidarGeometryBase &LidarRig::lidar(size_t idx) const {
     LVINS_CHECK(idx < lidars_.size(), "Index should be less than lidars size!");
-    return lidars_[idx];
+    return *lidars_[idx];
 }
 
 size_t LidarRig::size() const {

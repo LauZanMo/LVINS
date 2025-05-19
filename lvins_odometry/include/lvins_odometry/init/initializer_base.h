@@ -12,7 +12,7 @@ namespace lvins {
  */
 class InitializerBase : public NonCopyable {
 public:
-    using uPtr = std::unique_ptr<InitializerBase>;
+    using Ptr = std::unique_ptr<InitializerBase>;
 
     /**
      * @brief 构造函数
@@ -31,7 +31,7 @@ public:
      * @param g_w 世界坐标系下的重力向量
      * @return 所加载的初始化器
      */
-    static uPtr loadFromYaml(const YAML::Node &config, Vec3f g_w);
+    static Ptr loadFromYaml(const YAML::Node &config, Vec3f g_w);
 
     /**
      * @brief 将初始化器参数写入YAML节点
@@ -49,7 +49,7 @@ public:
      * @brief 添加雷达帧束
      * @param bundle 雷达帧束
      */
-    virtual void addLidarFrameBundle(const LidarFrameBundle::sPtr &bundle) = 0;
+    virtual void addLidarFrameBundle(const LidarFrameBundle::Ptr &bundle) = 0;
 
     /**
      * @brief 尝试初始化
@@ -69,7 +69,7 @@ public:
      * @return 雷达帧束容器
      * @warning 该方法在初始化完成后才可调用
      */
-    [[nodiscard]] virtual const std::vector<LidarFrameBundle::sPtr> &lidarFrameBundles() const = 0;
+    [[nodiscard]] virtual const std::vector<LidarFrameBundle::Ptr> &lidarFrameBundles() const = 0;
 
     /**
      * @brief 获取导航状态容器

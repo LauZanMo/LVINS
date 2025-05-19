@@ -18,16 +18,16 @@ Node convert<LidarGeometryBase>::encode(const LidarGeometryBase &lidar) {
 
 bool convert<LidarGeometryBase>::decode(const Node & /*node*/, LidarGeometryBase & /*lidar*/) {
     LVINS_ERROR("Unsupported action: Directly decode with LidarGeometryBase object, try to decode with "
-                "LidarGeometryBase::sPtr!");
+                "LidarGeometryBase::Ptr!");
     return false;
 }
 
-Node convert<LidarGeometryBase::sPtr>::encode(const LidarGeometryBase::sPtr &lidar) {
+Node convert<LidarGeometryBase::Ptr>::encode(const LidarGeometryBase::Ptr &lidar) {
     LVINS_CHECK(lidar != nullptr, "The lidar is nullptr!");
     return convert<LidarGeometryBase>::encode(*lidar);
 }
 
-bool convert<LidarGeometryBase::sPtr>::decode(const Node &node, LidarGeometryBase::sPtr &lidar) {
+bool convert<LidarGeometryBase::Ptr>::decode(const Node &node, LidarGeometryBase::Ptr &lidar) {
     LVINS_CHECK(node.IsMap(), "Unable to parse the lidar because the node is not a map!");
 
     // 加载常规参数

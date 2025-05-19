@@ -5,7 +5,7 @@ namespace lvins {
 
 static std::atomic<long> bundle_counter{0};
 
-LidarFrameBundle::LidarFrameBundle(const std::vector<LidarFrame::sPtr> &frames)
+LidarFrameBundle::LidarFrameBundle(const std::vector<LidarFrame::Ptr> &frames)
     : id_(bundle_counter++), frames_(frames) {
     LVINS_CHECK(!frames.empty(), "Frame bundle should contain at least one frame!");
     for (const auto &frame: frames_) {
@@ -67,14 +67,14 @@ size_t LidarFrameBundle::size() const {
     return frames_.size();
 }
 
-LidarFrame::sPtr &LidarFrameBundle::frame(size_t idx) {
+LidarFrame &LidarFrameBundle::frame(size_t idx) {
     LVINS_CHECK(idx < frames_.size(), "Index should be less than the number of frames!");
-    return frames_[idx];
+    return *frames_[idx];
 }
 
-LidarFrame::sConstPtr LidarFrameBundle::frame(size_t idx) const {
+const LidarFrame &LidarFrameBundle::frame(size_t idx) const {
     LVINS_CHECK(idx < frames_.size(), "Index should be less than the number of frames!");
-    return frames_[idx];
+    return *frames_[idx];
 }
 
 std::string LidarFrameBundle::print() const {

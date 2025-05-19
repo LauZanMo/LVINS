@@ -9,8 +9,7 @@ namespace lvins {
  * @brief 噪声参数类
  */
 struct NoiseParameters {
-    using sPtr      = std::shared_ptr<NoiseParameters>;
-    using sConstPtr = std::shared_ptr<const NoiseParameters>;
+    using Ptr = std::shared_ptr<NoiseParameters>;
 
     /**
      * @brief 构造函数
@@ -73,7 +72,7 @@ struct LVINS_FORMATTER<lvins::NoiseParameters> {
      * @param ctx 输出的格式化文本
      * @return 输出格式化文本的尾部迭代器
      */
-    static auto format(const lvins::NoiseParameters &noise_params, LVINS_FORMAT_CONTEXT &ctx)  {
+    static auto format(const lvins::NoiseParameters &noise_params, LVINS_FORMAT_CONTEXT &ctx) {
         return LVINS_FORMAT_TO(ctx.out(), "{}", noise_params.print());
     }
 };

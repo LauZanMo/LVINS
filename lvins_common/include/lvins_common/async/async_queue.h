@@ -16,8 +16,9 @@ namespace lvins {
 template<typename T>
 class AsyncQueue : public NonCopyable {
 public:
-    using sPtr = std::shared_ptr<AsyncQueue>;
-
+    /**
+     * @brief 默认构造函数
+     */
     AsyncQueue() = default;
 
     /**

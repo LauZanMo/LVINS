@@ -2,12 +2,12 @@
 
 namespace lvins {
 
-ESKF::ESKF(const YAML::Node &config, NoiseParameters::sConstPtr noise_params, Vec3f g_w, std::vector<SE3f> T_bs)
+ESKF::ESKF(const YAML::Node &config, const NoiseParameters &noise_params, Vec3f g_w, std::vector<SE3f> T_bs)
     : g_w_(std::move(g_w)),
       origin_g_w_(g_w_),
       T_bs_(std::move(T_bs)),
       origin_T_bs_(T_bs_),
-      noise_params_(std::move(noise_params)) {
+      noise_params_(noise_params) {
     // 初始化参数
     buffer_len_         = static_cast<int64_t>(YAML::get<double>(config, "buffer_len") * 1e9);
     max_iterations_     = YAML::get<size_t>(config, "max_iterations");
@@ -16,10 +16,10 @@ ESKF::ESKF(const YAML::Node &config, NoiseParameters::sConstPtr noise_params, Ve
 
     // 初始化传感器噪声协方差矩阵
     Q_                         = MatXf::Zero(dim_, dim_);
-    Q_.block<3, 3>(O_V, O_V)   = std::pow(noise_params_->acc_std, 2) * Mat33f::Identity();
-    Q_.block<3, 3>(O_Q, O_Q)   = std::pow(noise_params_->gyr_std, 2) * Mat33f::Identity();
-    Q_.block<3, 3>(O_BG, O_BG) = std::pow(noise_params_->gyr_bias_std, 2) * Mat33f::Identity();
-    Q_.block<3, 3>(O_BA, O_BA) = std::pow(noise_params_->acc_bias_std, 2) * Mat33f::Identity();
+    Q_.block<3, 3>(O_V, O_V)   = std::pow(noise_params_.acc_std, 2) * Mat33f::Identity();
+    Q_.block<3, 3>(O_Q, O_Q)   = std::pow(noise_params_.gyr_std, 2) * Mat33f::Identity();
+    Q_.block<3, 3>(O_BG, O_BG) = std::pow(noise_params_.gyr_bias_std, 2) * Mat33f::Identity();
+    Q_.block<3, 3>(O_BA, O_BA) = std::pow(noise_params_.acc_bias_std, 2) * Mat33f::Identity();
 }
 
 YAML::Node ESKF::writeToYaml() const {
@@ -71,20 +71,20 @@ void ESKF::initialize(const NavStates &states, const Imus &imus) {
 
     // 初始化误差协方差矩阵
     P_                       = MatXf::Zero(dim_, dim_);
-    P_.block<3, 3>(O_P, O_P) = std::pow(noise_params_->prior_pos_std, 2) * Mat33f::Identity();
-    P_.block<3, 3>(O_V, O_V) = std::pow(noise_params_->prior_vel_std, 2) * Mat33f::Identity();
-    P_.block<3, 3>(O_Q, O_Q) = Vec3f(LVINS_FLOAT(std::pow(noise_params_->prior_roll_pitch_std, 2)),
-                                     LVINS_FLOAT(std::pow(noise_params_->prior_roll_pitch_std, 2)),
-                                     LVINS_FLOAT(std::pow(noise_params_->prior_yaw_std, 2)))
+    P_.block<3, 3>(O_P, O_P) = std::pow(noise_params_.prior_pos_std, 2) * Mat33f::Identity();
+    P_.block<3, 3>(O_V, O_V) = std::pow(noise_params_.prior_vel_std, 2) * Mat33f::Identity();
+    P_.block<3, 3>(O_Q, O_Q) = Vec3f(LVINS_FLOAT(std::pow(noise_params_.prior_roll_pitch_std, 2)),
+                                     LVINS_FLOAT(std::pow(noise_params_.prior_roll_pitch_std, 2)),
+                                     LVINS_FLOAT(std::pow(noise_params_.prior_yaw_std, 2)))
                                        .asDiagonal();
-    P_.block<3, 3>(O_BG, O_BG) = std::pow(noise_params_->prior_gyr_bias_std, 2) * Mat33f::Identity();
-    P_.block<3, 3>(O_BA, O_BA) = std::pow(noise_params_->prior_acc_bias_std, 2) * Mat33f::Identity();
+    P_.block<3, 3>(O_BG, O_BG) = std::pow(noise_params_.prior_gyr_bias_std, 2) * Mat33f::Identity();
+    P_.block<3, 3>(O_BA, O_BA) = std::pow(noise_params_.prior_acc_bias_std, 2) * Mat33f::Identity();
     P_.block<3, 3>(O_GW, O_GW) = 1e-4 * Mat33f::Identity();
     for (long i = 0; i < static_cast<long>(T_bs_.size()); ++i) {
         P_.block<3, 3>(O_EXT_P + 6 * i, O_EXT_P + 6 * i) =
-                std::pow(noise_params_->extrinsic_trans_std, 2) * Mat33f::Identity();
+                std::pow(noise_params_.extrinsic_trans_std, 2) * Mat33f::Identity();
         P_.block<3, 3>(O_EXT_Q + 6 * i, O_EXT_Q + 6 * i) =
-                std::pow(noise_params_->extrinsic_rot_std, 2) * Mat33f::Identity();
+                std::pow(noise_params_.extrinsic_rot_std, 2) * Mat33f::Identity();
     }
 }
 

@@ -45,18 +45,18 @@ struct convert<LidarRig> {
  * @brief YAML序列化中LidarRig类指针的实现
  * @details 该类实现了yaml-cpp库中LidarRig类指针的序列化与反序列化的接口<br/>
  *         用法示例：<br/>
- *         1. 读取（反序列化）：auto rig = YAML::get<LidarRig::sPtr>(node, "rig");<br/>
+ *         1. 读取（反序列化）：auto rig = YAML::get<LidarRig::Ptr>(node, "rig");<br/>
  *         2. 写入（序列化）：node["rig"] = rig;<br/>
  *         详细实例可查看LidarRig::loadFromYaml/writeToYaml的实现
  */
 template<>
-struct convert<LidarRig::sPtr> {
+struct convert<LidarRig::Ptr> {
     /**
      * @brief 序列化LidarRig
      * @param lidar_rig LidarRig的实例指针
      * @return 是否序列化成功
      */
-    static Node encode(const LidarRig::sPtr &lidar_rig);
+    static Node encode(const LidarRig::Ptr &lidar_rig);
 
     /**
      * @brief 反序列化LidarRig
@@ -64,7 +64,7 @@ struct convert<LidarRig::sPtr> {
      * @param lidar_rig LidarRig的实例指针
      * @return 是否反序列化成功
      */
-    static bool decode(const Node &node, LidarRig::sPtr &lidar_rig);
+    static bool decode(const Node &node, LidarRig::Ptr &lidar_rig);
 };
 
 } // namespace YAML

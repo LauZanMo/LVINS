@@ -30,7 +30,7 @@ public:
      * @brief 添加雷达帧束
      * @param bundle 雷达帧束
      */
-    void addLidarFrameBundle(const LidarFrameBundle::sPtr &bundle) override;
+    void addLidarFrameBundle(const LidarFrameBundle::Ptr &bundle) override;
 
     /**
      * @brief 尝试初始化
@@ -50,7 +50,7 @@ public:
      * @return 雷达帧束容器
      * @warning 该方法在初始化完成后才可调用
      */
-    [[nodiscard]] const std::vector<LidarFrameBundle::sPtr> &lidarFrameBundles() const override;
+    [[nodiscard]] const std::vector<LidarFrameBundle::Ptr> &lidarFrameBundles() const override;
 
     /**
      * @brief 获取导航状态容器
@@ -83,9 +83,9 @@ public:
     [[nodiscard]] std::string print() const override;
 
 private:
-    Imus imus_;                                               ///< 用于初始化的IMU数据容器
-    std::vector<LidarFrameBundle::sPtr> lidar_frame_bundles_; ///< 用于初始化的雷达帧束容器
-    NavStates nav_states_;                                    ///< 用于初始化的导航状态容器
+    Imus imus_;                                              ///< 用于初始化的IMU数据容器
+    std::vector<LidarFrameBundle::Ptr> lidar_frame_bundles_; ///< 用于初始化的雷达帧束容器
+    NavStates nav_states_;                                   ///< 用于初始化的导航状态容器
 
     Float zero_gyr_thresh_; ///< 陀螺仪零速阈值
     Float zero_acc_thresh_; ///< 加速度零速阈值

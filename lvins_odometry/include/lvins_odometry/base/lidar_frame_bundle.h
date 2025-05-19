@@ -11,14 +11,13 @@ namespace lvins {
  */
 class LidarFrameBundle : public NonCopyable {
 public:
-    using sPtr      = std::shared_ptr<LidarFrameBundle>;
-    using sConstPtr = std::shared_ptr<const LidarFrameBundle>;
+    using Ptr = std::shared_ptr<LidarFrameBundle>;
 
     /**
      * @brief 构造函数
      * @param frames 同一时刻的所有帧的集合
      */
-    explicit LidarFrameBundle(const std::vector<LidarFrame::sPtr> &frames);
+    explicit LidarFrameBundle(const std::vector<LidarFrame::Ptr> &frames);
 
     /**
      * @brief 默认析构函数
@@ -84,14 +83,14 @@ public:
      * @param idx 指定索引
      * @return 指定索引下的帧
      */
-    [[nodiscard]] LidarFrame::sPtr &frame(size_t idx);
+    [[nodiscard]] LidarFrame &frame(size_t idx);
 
     /**
      * @brief 获取指定索引下的帧
      * @param idx 指定索引
      * @return 指定索引下的帧
      */
-    [[nodiscard]] LidarFrame::sConstPtr frame(size_t idx) const;
+    [[nodiscard]] const LidarFrame &frame(size_t idx) const;
 
     /**
      * @brief 打印帧束信息
@@ -100,9 +99,9 @@ public:
     [[nodiscard]] std::string print() const;
 
 private:
-    long id_;                              ///< 帧束id（历史唯一）
-    NavState state_;                       ///< 世界坐标系下的导航状态
-    std::vector<LidarFrame::sPtr> frames_; ///< 帧束中所有帧的集合（帧的时间戳相同）
+    long id_;                             ///< 帧束id（历史唯一）
+    NavState state_;                      ///< 世界坐标系下的导航状态
+    std::vector<LidarFrame::Ptr> frames_; ///< 帧束中所有帧的集合（帧的时间戳相同）
 };
 
 } // namespace lvins

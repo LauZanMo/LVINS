@@ -16,7 +16,7 @@ namespace lvins {
 template<typename... ObjectTypes>
 class AsyncServer {
 public:
-    using sPtr      = std::shared_ptr<AsyncServer>;
+    using Ptr       = std::shared_ptr<AsyncServer>;
     using ReadTask  = std::function<void(const std::shared_ptr<const ObjectTypes> &...)>;
     using WriteTask = std::function<void(const std::shared_ptr<ObjectTypes> &...)>;
 

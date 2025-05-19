@@ -6,19 +6,18 @@
 
 namespace lvins {
 
-CameraRig::CameraRig(std::string label, const std::vector<CameraGeometryBase::sPtr> &cameras,
-                     std::vector<SE3f> T_bs_vec)
+CameraRig::CameraRig(std::string label, const std::vector<CameraGeometryBase::Ptr> &cameras, std::vector<SE3f> T_bs_vec)
     : label_(std::move(label)), cameras_(cameras), T_bs_vec_(std::move(T_bs_vec)) {
     LVINS_CHECK(cameras_.size() == T_bs_vec_.size(), "Cameras size should be equal to T_bs_vec size!");
 }
 
-CameraRig::sPtr CameraRig::loadFromYaml(const std::string &config_file) {
+CameraRig::Ptr CameraRig::loadFromYaml(const std::string &config_file) {
     // 检查并转换路径（如果有需要）
     LVINS_CHECK(!config_file.empty(), "config_file should not be empty!");
 
     // 根据配置文件加载相机
     const auto node = YAML::load(path_helper::completePath(config_file));
-    return YAML::get<CameraRig::sPtr>(node, "");
+    return YAML::get<CameraRig::Ptr>(node, "");
 }
 
 void CameraRig::writeToYaml(const std::string &config_file) const {
@@ -35,9 +34,9 @@ const std::string &CameraRig::label() const {
     return label_;
 }
 
-const CameraGeometryBase::sPtr &CameraRig::camera(size_t idx) const {
+const CameraGeometryBase &CameraRig::camera(size_t idx) const {
     LVINS_CHECK(idx < cameras_.size(), "Index should be less than cameras size!");
-    return cameras_[idx];
+    return *cameras_[idx];
 }
 
 size_t CameraRig::size() const {

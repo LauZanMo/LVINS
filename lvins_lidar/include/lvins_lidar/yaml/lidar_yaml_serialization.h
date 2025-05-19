@@ -45,18 +45,18 @@ struct convert<LidarGeometryBase> {
  * @brief YAML序列化中LidarGeometryBase类指针的实现
  * @details 该类实现了yaml-cpp库中LidarGeometryBase类指针的序列化与反序列化的接口<br/>
  *          用法示例：<br/>
- *          1. 读取（反序列化）：auto lidar = YAML::get<LidarGeometryBase::sPtr>(node, "lidar0");<br/>
+ *          1. 读取（反序列化）：auto lidar = YAML::get<LidarGeometryBase::Ptr>(node, "lidar0");<br/>
  *          2. 写入（序列化）：node["lidar0"] = lidar;<br/>
  *          详细实例可查看LidarGeometryBase::loadFromYaml/writeToYaml的实现
  */
 template<>
-struct convert<LidarGeometryBase::sPtr> {
+struct convert<LidarGeometryBase::Ptr> {
     /**
      * @brief 序列化LidarGeometryBase类指针
      * @param lidar LidarGeometryBase的实例指针
      * @return 是否序列化成功
      */
-    static Node encode(const LidarGeometryBase::sPtr &lidar);
+    static Node encode(const LidarGeometryBase::Ptr &lidar);
 
     /**
      * @brief 反序列化LidarGeometryBase类指针
@@ -64,7 +64,7 @@ struct convert<LidarGeometryBase::sPtr> {
      * @param lidar LidarGeometryBase的实例指针
      * @return 是否反序列化成功
      */
-    static bool decode(const Node &node, LidarGeometryBase::sPtr &lidar);
+    static bool decode(const Node &node, LidarGeometryBase::Ptr &lidar);
 };
 
 } // namespace YAML

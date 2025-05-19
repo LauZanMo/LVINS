@@ -16,7 +16,7 @@ void StaticInitializer::addImu(const Imu &imu) {
     imus_.push_back(imu);
 }
 
-void StaticInitializer::addLidarFrameBundle(const LidarFrameBundle::sPtr &bundle) {
+void StaticInitializer::addLidarFrameBundle(const LidarFrameBundle::Ptr &bundle) {
     lidar_frame_bundles_.push_back(bundle);
 }
 
@@ -56,7 +56,7 @@ bool StaticInitializer::tryInitialize() {
 
         // 重构帧束容器，仅保留在imus_时间戳范围内的帧束
         lidar_frame_bundles_.erase(std::remove_if(lidar_frame_bundles_.begin(), lidar_frame_bundles_.end(),
-                                                  [this](const LidarFrameBundle::sPtr &bundle) {
+                                                  [this](const LidarFrameBundle::Ptr &bundle) {
                                                       return bundle->timestamp() < imus_.front().timestamp ||
                                                              bundle->timestamp() > imus_.back().timestamp;
                                                   }),
@@ -86,7 +86,7 @@ const Imus &StaticInitializer::imus() const {
     return imus_;
 }
 
-const std::vector<LidarFrameBundle::sPtr> &StaticInitializer::lidarFrameBundles() const {
+const std::vector<LidarFrameBundle::Ptr> &StaticInitializer::lidarFrameBundles() const {
     LVINS_CHECK(initialized_, "Lidar frame bundles should be accessed after initialized!");
     return lidar_frame_bundles_;
 }

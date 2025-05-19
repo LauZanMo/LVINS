@@ -17,7 +17,7 @@ namespace lvins {
  */
 class TimeWheelScheduler : public NonCopyable {
 public:
-    using sPtr = std::shared_ptr<TimeWheelScheduler>;
+    using Ptr = std::shared_ptr<TimeWheelScheduler>;
 
     /**
      * @brief 构造函数
@@ -79,20 +79,20 @@ private:
      * @brief 获取当前最大的时间轮
      * @return 当前最大的时间轮
      */
-    TimeWheel::sPtr &greatestWheel();
+    TimeWheel::Ptr &greatestWheel();
 
     /**
      * @brief 获取当前最小的时间轮
      * @return 当前最小的时间轮
      */
-    TimeWheel::sPtr &leastWheel();
+    TimeWheel::Ptr &leastWheel();
 
     std::atomic<bool> running_{false};  ///< 线程运行标志位
     mutex_t wheel_mutex_, sleep_mutex_; ///< 互斥锁
     std::condition_variable sleep_cv_;  ///< 条件变量
     std::thread thread_;                ///< 线程对象
 
-    std::vector<TimeWheel::sPtr> wheels_;          ///< 时间轮集合
+    std::vector<TimeWheel::Ptr> wheels_;           ///< 时间轮集合
     std::unordered_set<uint64_t> cancel_task_ids_; ///< 取消的任务ID集合
 
     std::atomic<uint64_t> next_id_{1}; ///< 下一个任务ID

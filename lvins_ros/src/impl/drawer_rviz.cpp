@@ -37,7 +37,7 @@ DrawerRviz::DrawerRviz(const YAML::Node &config, rclcpp::Node &node) {
     tf_broadcaster_  = std::make_unique<tf2_ros::TransformBroadcaster>(node);
 }
 
-void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::sPtr &bundle) {
+void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::Ptr &bundle) {
     LVINS_CHECK(frame_point_cloud_pubs_.size() == bundle->size(),
                 "Publishers and frame bundle should have the same size!");
 
@@ -77,7 +77,7 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
     tf_broadcaster_->sendTransform(trans_msg);
 
     for (size_t i = 0; i < bundle->size(); ++i) {
-        const auto &T_bs                  = bundle->frame(i)->Tbs();
+        const auto &T_bs                  = bundle->frame(i).Tbs();
         trans_msg.header.frame_id         = imu_frame_id_;
         trans_msg.child_frame_id          = lidar_frame_ids_[i];
         trans_msg.transform.translation.x = T_bs.translation()[0];
@@ -95,7 +95,7 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
         if (frame_point_cloud_pubs_[i]->get_subscription_count() != 0) {
             const auto &frame           = bundle->frame(i);
             PointCloud::Ptr point_cloud = pcl::make_shared<PointCloud>();
-            pcl::transformPointCloud(*frame->pointCloud(), *point_cloud, frame->Twf().matrix());
+            pcl::transformPointCloud(frame.pointCloud(), *point_cloud, frame.Twf().matrix());
 
             sensor_msgs::msg::PointCloud2 msg;
             pcl::toROSMsg(*point_cloud, msg);

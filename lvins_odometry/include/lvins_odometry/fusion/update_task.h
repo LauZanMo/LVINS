@@ -11,7 +11,7 @@ namespace lvins::eskf {
  */
 class UpdateTask {
 public:
-    using sPtr = std::shared_ptr<UpdateTask>;
+    using Ptr = std::shared_ptr<UpdateTask>;
 
     /**
      * @brief 构造函数
@@ -40,7 +40,7 @@ public:
      * @param V 观测噪声协方差矩阵
      * @param r 观测残差向量
      */
-    virtual void observe(const NoiseParameters::sConstPtr &noise_params, long dim, const NavState &state,
+    virtual void observe(const NoiseParameters &noise_params, long dim, const NavState &state,
                          const std::vector<SE3f> &T_bs, MatXf &H, MatXf &V, VecXf &r) = 0;
 
     /**

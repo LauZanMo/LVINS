@@ -25,16 +25,16 @@ Node convert<CameraRig>::encode(const CameraRig &camera_rig) {
 
 bool convert<CameraRig>::decode(const Node & /*node*/, CameraRig & /*camera_rig*/) {
     LVINS_ERROR("Unsupported action: Directly decode with CameraRig object, try to decode with "
-                "CameraRig::sPtr!");
+                "CameraRig::Ptr!");
     return false;
 }
 
-Node convert<CameraRig::sPtr>::encode(const CameraRig::sPtr &camera_rig) {
+Node convert<CameraRig::Ptr>::encode(const CameraRig::Ptr &camera_rig) {
     LVINS_CHECK(camera_rig != nullptr, "The camera rig is nullptr!");
     return convert<CameraRig>::encode(*camera_rig);
 }
 
-bool convert<CameraRig::sPtr>::decode(const Node &node, CameraRig::sPtr &camera_rig) {
+bool convert<CameraRig::Ptr>::decode(const Node &node, CameraRig::Ptr &camera_rig) {
     LVINS_CHECK(node.IsMap(), "Unable to parse the camera rig because the node is not a map!");
 
     // 加载常规参数
@@ -47,13 +47,13 @@ bool convert<CameraRig::sPtr>::decode(const Node &node, CameraRig::sPtr &camera_
     LVINS_CHECK(num_cameras > 0, "Number of cameras should be greater than 0!");
 
     // 加载所有相机及其外参
-    std::vector<CameraGeometryBase::sPtr> cameras;
+    std::vector<CameraGeometryBase::Ptr> cameras;
     std::vector<SE3f> T_bs_vec;
     for (size_t camera_idx = 0; camera_idx < num_cameras; ++camera_idx) {
         const auto camera_node = cameras_node[camera_idx];
         LVINS_CHECK(camera_node && camera_node.IsMap(), "Unable to get camera node for camera #{}!", camera_idx);
 
-        auto camera   = YAML::get<CameraGeometryBase::sPtr>(camera_node, "camera");
+        auto camera   = YAML::get<CameraGeometryBase::Ptr>(camera_node, "camera");
         auto T_bs_raw = YAML::get<Mat44f>(camera_node, "T_bs");
         camera->setId(static_cast<int>(camera_idx));
 

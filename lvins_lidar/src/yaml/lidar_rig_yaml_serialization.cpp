@@ -25,16 +25,16 @@ Node convert<LidarRig>::encode(const LidarRig &lidar_rig) {
 
 bool convert<LidarRig>::decode(const Node & /*node*/, LidarRig & /*lidar_rig*/) {
     LVINS_ERROR("Unsupported action: Directly decode with LidarRig object, try to decode with "
-                "LidarRig::sPtr!");
+                "LidarRig::Ptr!");
     return false;
 }
 
-Node convert<LidarRig::sPtr>::encode(const LidarRig::sPtr &lidar_rig) {
+Node convert<LidarRig::Ptr>::encode(const LidarRig::Ptr &lidar_rig) {
     LVINS_CHECK(lidar_rig != nullptr, "The lidar rig is nullptr!");
     return convert<LidarRig>::encode(*lidar_rig);
 }
 
-bool convert<LidarRig::sPtr>::decode(const Node &node, LidarRig::sPtr &lidar_rig) {
+bool convert<LidarRig::Ptr>::decode(const Node &node, LidarRig::Ptr &lidar_rig) {
     LVINS_CHECK(node.IsMap(), "Unable to parse the lidar rig because the node is not a map!");
 
     // 加载常规参数
@@ -47,13 +47,13 @@ bool convert<LidarRig::sPtr>::decode(const Node &node, LidarRig::sPtr &lidar_rig
     LVINS_CHECK(num_lidars > 0, "Number of lidars should be greater than 0!");
 
     // 加载所有雷达及其外参
-    std::vector<LidarGeometryBase::sPtr> lidars;
+    std::vector<LidarGeometryBase::Ptr> lidars;
     std::vector<SE3f> T_bs_vec;
     for (size_t lidar_idx = 0; lidar_idx < num_lidars; ++lidar_idx) {
         const auto lidar_node = lidars_node[lidar_idx];
         LVINS_CHECK(lidar_node && lidar_node.IsMap(), "Unable to get lidar node for lidar #{}!", lidar_idx);
 
-        auto lidar    = YAML::get<LidarGeometryBase::sPtr>(lidar_node, "lidar");
+        auto lidar    = YAML::get<LidarGeometryBase::Ptr>(lidar_node, "lidar");
         auto T_bs_raw = YAML::get<Mat44f>(lidar_node, "T_bs");
         lidar->setId(static_cast<int>(lidar_idx));
 
