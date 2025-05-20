@@ -37,7 +37,7 @@ public:
      * @param state 预测当前状态
      * @param T_bs 预测外参集合
      * @param Ht_Vinv_H IESKF计算中间项，也是非线性优化的Hessian矩阵
-     * @param Ht_Vinv_r IESKF计算中间项，也是非线性优化的g向量
+     * @param Ht_Vinv_r IESKF计算中间项，也是非线性优化的b向量
      */
     virtual void observe(const NoiseParameters &noise_params, long dim, const NavState &state,
                          const std::vector<SE3f> &T_bs, MatXf &Ht_Vinv_H, VecXf &Ht_Vinv_r) = 0;
