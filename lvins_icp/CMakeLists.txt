@@ -23,8 +23,11 @@ add_library(${PROJECT_NAME} SHARED
     src/preprocess/voxel_grid_sample.cpp
     src/preprocess/box_filter.cpp
     src/align/point_cloud_aligner_base.cpp
+    src/align/optimizer.cpp
+    src/align/reducer.cpp
     src/align/terminate_criteria.cpp
     src/align/result.cpp
+    src/factor/gicp_factor.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

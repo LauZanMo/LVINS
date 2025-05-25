@@ -16,8 +16,8 @@ struct VoxelInfo {
      */
     VoxelInfo(Vec3i coord, size_t lru) : coord(std::move(coord)), lru(lru) {}
 
-    Vec3i coord{}; ///< 体素坐标
-    size_t lru{};  ///< 上一次使用计数
+    Vec3i coord; ///< 体素坐标
+    size_t lru;  ///< 上一次使用计数
 };
 
 /**

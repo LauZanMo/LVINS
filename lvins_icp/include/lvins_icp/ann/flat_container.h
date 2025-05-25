@@ -30,8 +30,8 @@ public:
          */
         [[nodiscard]] std::string print() const;
 
-        Float min_sq_dist_in_cell     = 0.1 * 0.1; ///< 容器中最小的点间距离平方
-        size_t max_num_points_in_cell = 15;        ///< 容器中最大点数
+        Float min_sq_dist_in_cell;     ///< 容器中最小的点间距离平方
+        size_t max_num_points_in_cell; ///< 容器中最大点数
     };
 
     /**
