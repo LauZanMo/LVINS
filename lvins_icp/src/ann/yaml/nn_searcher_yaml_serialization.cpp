@@ -9,7 +9,7 @@ namespace YAML {
 
 Node convert<NearestNeighborSearcher>::encode(const NearestNeighborSearcher &nn_searcher) {
     Node node;
-    if (internal::encodeIncrementalVoxelMap<FlatContainer>(nn_searcher, &node)) {
+    if (!internal::encodeIncrementalVoxelMap<FlatContainer>(nn_searcher, &node)) {
         LVINS_FATAL("Unsupported nearest neighbor searcher type to encode!");
     }
 
@@ -23,7 +23,7 @@ bool convert<NearestNeighborSearcher>::decode(const Node & /*node*/, NearestNeig
 }
 
 Node convert<std::shared_ptr<NearestNeighborSearcher>>::encode(const NearestNeighborSearcher::Ptr &nn_searcher) {
-    LVINS_CHECK(nullptr != nn_searcher, "The nearest neighbor searcher is nullptr!");
+    LVINS_CHECK(nn_searcher != nullptr, "The nearest neighbor searcher is nullptr!");
     return convert<NearestNeighborSearcher>::encode(*nn_searcher);
 }
 
@@ -34,14 +34,14 @@ bool convert<std::shared_ptr<NearestNeighborSearcher>>::decode(const Node &node,
 
     // 实例化最近邻搜索器
     if (type == "ivox") {
-        const auto leaf_size       = YAML::get<Float>(node, "leaf_size");
+        const auto leaf_size       = YAML::get<float>(node, "leaf_size");
         const auto lru_horizon     = YAML::get<size_t>(node, "lru_horizon");
         const auto lru_clear_cycle = YAML::get<size_t>(node, "lru_clear_cycle");
         const auto search_offsets  = YAML::get<size_t>(node, "search_offsets");
         const auto content_type    = YAML::get<std::string>(node["voxel_content"], "type");
 
         if (content_type == "flat") {
-            const auto min_sq_dist_in_cell    = YAML::get<Float>(node["voxel_content"], "min_sq_dist_in_cell");
+            const auto min_sq_dist_in_cell    = YAML::get<float>(node["voxel_content"], "min_sq_dist_in_cell");
             const auto max_num_points_in_cell = YAML::get<size_t>(node["voxel_content"], "max_num_points_in_cell");
             FlatContainer::Setting setting(min_sq_dist_in_cell, max_num_points_in_cell);
             nn_searcher = std::make_shared<IncrementalVoxelMap<FlatContainer>>(setting, leaf_size, lru_horizon,

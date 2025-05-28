@@ -5,8 +5,8 @@
 namespace lvins {
 
 template<typename IndexTransform>
-KnnResult<IndexTransform>::KnnResult(std::vector<size_t> &indices, std::vector<Float> &sq_dists, size_t capacity,
-                                     Float max_sq_dist, const IndexTransform &index_transform)
+KnnResult<IndexTransform>::KnnResult(std::vector<size_t> &indices, std::vector<float> &sq_dists, size_t capacity,
+                                     float max_sq_dist, const IndexTransform &index_transform)
     : indices_(indices), sq_dists_(sq_dists), capacity_(capacity), index_transform_(index_transform) {
     LVINS_CHECK(capacity_ > 0, "Capacity should be greater than 0!");
     LVINS_CHECK(max_sq_dist > 0, "Max squared distance should be greater than 0!");
@@ -29,7 +29,7 @@ size_t KnnResult<IndexTransform>::numFound() const {
 }
 
 template<typename IndexTransform>
-void KnnResult<IndexTransform>::push(size_t index, Float sq_dist) {
+void KnnResult<IndexTransform>::push(size_t index, float sq_dist) {
     if (sq_dist >= sq_dists_.back()) {
         return;
     }

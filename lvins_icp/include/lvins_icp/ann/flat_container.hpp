@@ -1,7 +1,7 @@
 namespace lvins {
 
 template<typename Result>
-void FlatContainer::knnSearch(const Vec3f &point, Result &result) const {
+void FlatContainer::knnSearch(const Eigen::Vector3f &point, Result &result) const {
     if (points_.empty()) {
         return;
     }

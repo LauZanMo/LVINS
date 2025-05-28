@@ -46,6 +46,11 @@ public:
     virtual void insert(const PointCloud &point_cloud, const SE3f &T) = 0;
 
     /**
+     * @brief 清空最近邻搜索器
+     */
+    virtual void clear() = 0;
+
+    /**
      * @brief 对指定点进行指定数量的最近邻搜索
      * @param point 指定点
      * @param k 指定数量
@@ -54,35 +59,41 @@ public:
      * @param max_sq_dist 指定点与近邻点的最大距离平方
      * @return 实际找到的最近邻数量
      */
-    [[nodiscard]] virtual size_t knnSearch(const Vec3f &point, size_t k, std::vector<size_t> &k_indices,
-                                           std::vector<Float> &k_sq_dists, Float max_sq_dist) const = 0;
+    [[nodiscard]] virtual size_t knnSearch(const Eigen::Vector3f &point, size_t k, std::vector<size_t> &k_indices,
+                                           std::vector<float> &k_sq_dists, float max_sq_dist) const = 0;
 
     /**
-     * @brief 检测点集是否为空
-     * @return 点集是否为空
+     * @brief 检测最近邻搜索器是否为空
+     * @return 最近邻搜索器是否为空
      */
-    [[nodiscard]] virtual bool isPointsEmpty() const = 0;
+    [[nodiscard]] virtual bool empty() const = 0;
+
+    /**
+     * @brief 获取最近邻搜索器大小
+     * @return 最近邻搜索器大小
+     */
+    [[nodiscard]] virtual size_t size() const = 0;
 
     /**
      * @brief 获取指定索引的点
      * @param i 指定索引
      * @return 指定索引的点
      */
-    [[nodiscard]] virtual const Vec3f &point(size_t i) const = 0;
+    [[nodiscard]] virtual const Eigen::Vector3f &point(size_t i) const = 0;
 
     /**
      * @brief 获取指定索引的法向量
      * @param i 指定索引
      * @return 指定索引的法向量
      */
-    [[nodiscard]] virtual const Vec3f &normal(size_t i) const = 0;
+    [[nodiscard]] virtual const Eigen::Vector3f &normal(size_t i) const = 0;
 
     /**
      * @brief 获取指定索引的协方差矩阵
      * @param i 指定索引
      * @return 指定索引的协方差矩阵
      */
-    [[nodiscard]] virtual const Mat33f &covariance(size_t i) const = 0;
+    [[nodiscard]] virtual const Eigen::Matrix3f &covariance(size_t i) const = 0;
 
     /**
      * @brief 打印最近邻搜索器参数

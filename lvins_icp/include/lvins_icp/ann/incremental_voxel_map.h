@@ -35,7 +35,7 @@ public:
      * @param lru_clear_cycle LRU清除周期
      * @param search_offsets 搜索偏移量（1，7，27）
      */
-    IncrementalVoxelMap(const typename VoxelContent::Setting &voxel_setting, Float leaf_size, size_t lru_horizon,
+    IncrementalVoxelMap(const typename VoxelContent::Setting &voxel_setting, float leaf_size, size_t lru_horizon,
                         size_t lru_clear_cycle, size_t search_offsets);
 
     /**
@@ -48,7 +48,7 @@ public:
      * @brief 获取体素尺寸
      * @return 体素尺寸
      */
-    [[nodiscard]] Float leafSize() const;
+    [[nodiscard]] float leafSize() const;
 
     /**
      * @brief 获取LRU删除阈值
@@ -82,6 +82,11 @@ public:
     void insert(const PointCloud &point_cloud, const SE3f &T) override;
 
     /**
+     * @brief 清空最近邻搜索器
+     */
+    void clear() override;
+
+    /**
      * @brief 对指定点进行指定数量的最近邻搜索
      * @param point 指定点
      * @param k 指定数量
@@ -90,35 +95,41 @@ public:
      * @param max_sq_dist 指定点与近邻点的最大距离平方
      * @return 实际找到的最近邻数量
      */
-    [[nodiscard]] size_t knnSearch(const Vec3f &point, size_t k, std::vector<size_t> &k_indices,
-                                   std::vector<Float> &k_sq_dists, Float max_sq_dist) const override;
+    [[nodiscard]] size_t knnSearch(const Eigen::Vector3f &point, size_t k, std::vector<size_t> &k_indices,
+                                   std::vector<float> &k_sq_dists, float max_sq_dist) const override;
 
     /**
-     * @brief 检测点集是否为空
-     * @return
+     * @brief 检测最近邻搜索器是否为空
+     * @return 最近邻搜索器是否为空
      */
-    [[nodiscard]] bool isPointsEmpty() const override;
+    [[nodiscard]] bool empty() const override;
+
+    /**
+     * @brief 获取最近邻搜索器大小
+     * @return 最近邻搜索器大小
+     */
+    [[nodiscard]] size_t size() const override;
 
     /**
      * @brief 获取指定索引的点
      * @param i 指定索引
      * @return 指定索引的点
      */
-    [[nodiscard]] const Vec3f &point(size_t i) const override;
+    [[nodiscard]] const Eigen::Vector3f &point(size_t i) const override;
 
     /**
      * @brief 获取指定索引的法向量
      * @param i 指定索引
      * @return 指定索引的法向量
      */
-    [[nodiscard]] const Vec3f &normal(size_t i) const override;
+    [[nodiscard]] const Eigen::Vector3f &normal(size_t i) const override;
 
     /**
      * @brief 获取指定索引的协方差矩阵
      * @param i 指定索引
      * @return 指定索引的协方差矩阵
      */
-    [[nodiscard]] const Mat33f &covariance(size_t i) const override;
+    [[nodiscard]] const Eigen::Matrix3f &covariance(size_t i) const override;
 
     /**
      * @brief 打印最近邻搜索器参数
@@ -153,7 +164,7 @@ private:
     std::unordered_map<Vec3i, size_t> voxel_index_map_;                       ///< 体素坐标-体素索引映射
     std::vector<std::shared_ptr<std::pair<VoxelInfo, VoxelContent>>> voxels_; ///< 体素集合
 
-    Float inv_leaf_size_;               ///< 体素尺寸的倒数
+    float inv_leaf_size_;               ///< 体素尺寸的倒数
     size_t lru_horizon_;                ///< LRU删除阈值
     size_t lru_clear_cycle_;            ///< LRU清除周期
     size_t lru_counter_{0};             ///< LRU计数器

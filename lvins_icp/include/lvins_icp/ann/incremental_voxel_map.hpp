@@ -4,7 +4,7 @@ namespace lvins {
 
 template<typename VoxelContent>
 IncrementalVoxelMap<VoxelContent>::IncrementalVoxelMap(const typename VoxelContent::Setting &voxel_setting,
-                                                       Float leaf_size, size_t lru_horizon, size_t lru_clear_cycle,
+                                                       float leaf_size, size_t lru_horizon, size_t lru_clear_cycle,
                                                        size_t search_offsets)
     : voxel_setting_(voxel_setting),
       inv_leaf_size_(LVINS_FLOAT(1.0) / leaf_size),
@@ -19,7 +19,7 @@ const typename VoxelContent::Setting &IncrementalVoxelMap<VoxelContent>::voxelSe
 }
 
 template<typename VoxelContent>
-Float IncrementalVoxelMap<VoxelContent>::leafSize() const {
+float IncrementalVoxelMap<VoxelContent>::leafSize() const {
     return 1.0 / inv_leaf_size_;
 }
 
@@ -70,8 +70,8 @@ template<typename VoxelContent>
 void IncrementalVoxelMap<VoxelContent>::insert(const PointCloud &point_cloud, const SE3f &T) {
     // 将点云分别嵌入对应体素
     for (size_t i = 0; i < point_cloud.size(); ++i) {
-        const Vec3f point = T * point_cloud[i].getVector3fMap().cast<Float>();
-        const Vec3i coord = fastFloor(point * inv_leaf_size_);
+        const Eigen::Vector3f point = T.cast<float>() * point_cloud[i].getVector3fMap();
+        const Vec3i coord           = fastFloor(point * inv_leaf_size_);
 
         // 查询体素是否存在，不存在则创建新的体素
         auto found = voxel_index_map_.find(coord);
@@ -112,8 +112,16 @@ void IncrementalVoxelMap<VoxelContent>::insert(const PointCloud &point_cloud, co
 }
 
 template<typename VoxelContent>
-size_t IncrementalVoxelMap<VoxelContent>::knnSearch(const Vec3f &point, size_t k, std::vector<size_t> &k_indices,
-                                                    std::vector<Float> &k_sq_dists, Float max_sq_dist) const {
+void IncrementalVoxelMap<VoxelContent>::clear() {
+    voxel_index_map_.clear();
+    voxels_.clear();
+    lru_counter_ = 0;
+}
+
+template<typename VoxelContent>
+size_t IncrementalVoxelMap<VoxelContent>::knnSearch(const Eigen::Vector3f &point, size_t k,
+                                                    std::vector<size_t> &k_indices, std::vector<float> &k_sq_dists,
+                                                    float max_sq_dist) const {
     // 获取体素坐标中心
     const Vec3i center = fastFloor(point * inv_leaf_size_);
 
@@ -145,26 +153,35 @@ size_t IncrementalVoxelMap<VoxelContent>::knnSearch(const Vec3f &point, size_t k
 }
 
 template<typename VoxelContent>
-bool IncrementalVoxelMap<VoxelContent>::isPointsEmpty() const {
+bool IncrementalVoxelMap<VoxelContent>::empty() const {
     return voxels_.empty() ? true : voxels_.front()->second.points().empty();
 }
 
 template<typename VoxelContent>
-const Vec3f &IncrementalVoxelMap<VoxelContent>::point(size_t i) const {
+size_t IncrementalVoxelMap<VoxelContent>::size() const {
+    size_t ret = 0;
+    for (const auto &voxel: voxels_) {
+        ret += voxel->second.size();
+    }
+    return ret;
+}
+
+template<typename VoxelContent>
+const Eigen::Vector3f &IncrementalVoxelMap<VoxelContent>::point(size_t i) const {
     LVINS_CHECK(voxelId(i) < voxels_.size(), "Invalid voxel id: {}", voxelId(i));
     LVINS_CHECK(pointId(i) < voxels_[voxelId(i)]->second.points().size(), "Invalid point id: {}", pointId(i));
     return voxels_[voxelId(i)]->second.points()[pointId(i)];
 }
 
 template<typename VoxelContent>
-const Vec3f &IncrementalVoxelMap<VoxelContent>::normal(size_t i) const {
+const Eigen::Vector3f &IncrementalVoxelMap<VoxelContent>::normal(size_t i) const {
     LVINS_CHECK(voxelId(i) < voxels_.size(), "Invalid voxel id: {}", voxelId(i));
     LVINS_CHECK(pointId(i) < voxels_[voxelId(i)]->second.points().size(), "Invalid point id: {}", pointId(i));
     return voxels_[voxelId(i)]->second.normals()[pointId(i)];
 }
 
 template<typename VoxelContent>
-const Mat33f &IncrementalVoxelMap<VoxelContent>::covariance(size_t i) const {
+const Eigen::Matrix3f &IncrementalVoxelMap<VoxelContent>::covariance(size_t i) const {
     LVINS_CHECK(voxelId(i) < voxels_.size(), "Invalid voxel id: {}", voxelId(i));
     LVINS_CHECK(pointId(i) < voxels_[voxelId(i)]->second.points().size(), "Invalid point id: {}", pointId(i));
     return voxels_[voxelId(i)]->second.covariances()[pointId(i)];

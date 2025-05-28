@@ -21,7 +21,7 @@ public:
          * @param min_sq_dist_in_cell 容器中最小的点间距离平方
          * @param max_num_points_in_cell 容器中最大点数
          */
-        Setting(Float min_sq_dist_in_cell, size_t max_num_points_in_cell)
+        Setting(float min_sq_dist_in_cell, size_t max_num_points_in_cell)
             : min_sq_dist_in_cell(min_sq_dist_in_cell), max_num_points_in_cell(max_num_points_in_cell) {}
 
         /**
@@ -30,7 +30,7 @@ public:
          */
         [[nodiscard]] std::string print() const;
 
-        Float min_sq_dist_in_cell;     ///< 容器中最小的点间距离平方
+        float min_sq_dist_in_cell;     ///< 容器中最小的点间距离平方
         size_t max_num_points_in_cell; ///< 容器中最大点数
     };
 
@@ -54,19 +54,19 @@ public:
      * @brief 获取容器中的点集
      * @return 点集
      */
-    [[nodiscard]] const std::vector<Vec3f> &points() const;
+    [[nodiscard]] const std::vector<Eigen::Vector3f> &points() const;
 
     /**
      * @brief 获取容器中的法向量集合
      * @return 法向量集合
      */
-    [[nodiscard]] const std::vector<Vec3f> &normals() const;
+    [[nodiscard]] const std::vector<Eigen::Vector3f> &normals() const;
 
     /**
      * @brief 获取容器中的协方差矩阵集合
      * @return 协方差矩阵集合
      */
-    [[nodiscard]] const std::vector<Mat33f> &covariances() const;
+    [[nodiscard]] const std::vector<Eigen::Matrix3f> &covariances() const;
 
     /**
      * @brief 将点云中指定索引的点经过变换后加入容器
@@ -84,7 +84,7 @@ public:
      * @param result 搜索结果
      */
     template<typename Result>
-    void knnSearch(const Vec3f &point, Result &result) const;
+    void knnSearch(const Eigen::Vector3f &point, Result &result) const;
 
     /**
      * @brief 对容器进行最终化处理（无操作）
@@ -92,9 +92,9 @@ public:
     static void finalize() {}
 
 private:
-    std::vector<Vec3f> points_;       ///< 点集
-    std::vector<Vec3f> normals_;      ///< 法向量集合
-    std::vector<Mat33f> covariances_; ///< 协方差矩阵集合
+    std::vector<Eigen::Vector3f> points_;      ///< 点集
+    std::vector<Eigen::Vector3f> normals_;     ///< 法向量集合
+    std::vector<Eigen::Matrix3f> covariances_; ///< 协方差矩阵集合
 };
 
 } // namespace lvins
