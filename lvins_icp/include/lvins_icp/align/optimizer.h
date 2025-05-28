@@ -19,7 +19,7 @@ public:
      * @param init_lambda 初始lambda值
      * @param lambda_factor lambda调整因子
      */
-    Optimizer(size_t max_iterations, size_t max_inner_iterations, Float init_lambda, Float lambda_factor);
+    Optimizer(size_t max_iterations, size_t max_inner_iterations, double init_lambda, double lambda_factor);
 
     /**
      * @brief 优化点云配准
@@ -28,6 +28,7 @@ public:
      * @param source_point_clouds 源点云集合
      * @param init_T_tb 目标点云到载体的初始相对位姿
      * @param init_T_bs 初始雷达外参集合
+     * @param estimate_extrinsic 是否估计雷达外参
      * @param criteria 终止条件
      * @param factors 点云配准因子集合
      * @return 点云配准结果
@@ -35,14 +36,44 @@ public:
     template<typename Factor>
     Result optimize(const NearestNeighborSearcher &target_nn_searcher,
                     const std::vector<const PointCloud *> &source_point_clouds, const SE3f &init_T_tb,
-                    const std::vector<SE3f> &init_T_bs, const TerminateCriteria &criteria,
+                    const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic, const TerminateCriteria &criteria,
                     std::vector<std::vector<Factor>> &factors) const;
+
+    /**
+     * @brief 获取最大迭代次数
+     * @return 最大迭代次数
+     */
+    [[nodiscard]] size_t maxIterations() const;
+
+    /**
+     * @brief 获取最大内部迭代次数（lambda调整）
+     * @return 最大内部迭代次数
+     */
+    [[nodiscard]] size_t maxInnerIterations() const;
+
+    /**
+     * @brief 获取初始lambda值
+     * @return 初始lambda值
+     */
+    [[nodiscard]] double initLambda() const;
+
+    /**
+     * @brief 获取lambda调整因子
+     * @return lambda调整因子
+     */
+    [[nodiscard]] double lambdaFactor() const;
+
+    /**
+     * @brief 打印点云配准优化器参数
+     * @return 点云配准优化器参数
+     */
+    [[nodiscard]] std::string print() const;
 
 private:
     size_t max_iterations_;       ///< 最大迭代次数
     size_t max_inner_iterations_; ///< 最大内部迭代次数（lambda调整）
-    Float init_lambda_;           ///< 初始lambda值
-    Float lambda_factor_;         ///< lambda调整因子
+    double init_lambda_;          ///< 初始lambda值
+    double lambda_factor_;        ///< lambda调整因子
 };
 
 } // namespace lvins::point_cloud_align

@@ -20,14 +20,14 @@ struct LinearizeSum {
           factors(other.factors) {}
 
     void operator()(const tbb::blocked_range<size_t> &r) {
-        MatXf Ht = H;
-        VecXf bt = b;
-        Float et = e;
+        MatXd Ht  = H;
+        VecXd bt  = b;
+        double et = e;
 
         for (size_t i = r.begin(); i != r.end(); ++i) {
-            MatXf Hi;
-            VecXf bi;
-            Float ei;
+            MatXd Hi;
+            VecXd bi;
+            double ei;
 
             if (!factors[i].linearize(target_nn_searcher, source, T_tb, T_bs, i, Hi, bi, ei)) {
                 continue;
@@ -55,9 +55,9 @@ struct LinearizeSum {
     const SE3f &T_bs;
     std::vector<Factor> &factors;
 
-    MatXf H{MatXf::Zero(12, 12)};
-    VecXf b{VecXf::Zero(12)};
-    Float e{0.0};
+    MatXd H{MatXd::Zero(12, 12)};
+    VecXd b{VecXd::Zero(12)};
+    double e{0.0};
 };
 
 /**
@@ -68,7 +68,7 @@ template<typename Factor>
 struct ErrorSum {
     ErrorSum(const NearestNeighborSearcher &target_nn_searcher, const PointCloud &source, const SE3f &T_tb,
              const SE3f &T_bs, std::vector<Factor> &factors)
-        : target_nn_searcher(target_nn_searcher), source(source), T_tb(T_tb), T_bs(T_bs), factors(factors), e(0.0) {}
+        : target_nn_searcher(target_nn_searcher), source(source), T_tb(T_tb), T_bs(T_bs), factors(factors) {}
 
     ErrorSum(const ErrorSum &other, tbb::split)
         : target_nn_searcher(other.target_nn_searcher),
@@ -78,7 +78,7 @@ struct ErrorSum {
           factors(other.factors) {}
 
     void operator()(const tbb::blocked_range<size_t> &r) {
-        Float et = e;
+        double et = e;
 
         for (size_t i = r.begin(); i != r.end(); ++i) {
             et += factors[i].error(target_nn_searcher, source, T_tb, T_bs);
@@ -97,21 +97,21 @@ struct ErrorSum {
     const SE3f &T_bs;
     std::vector<Factor> &factors;
 
-    Float e{0.0};
+    double e{0.0};
 };
 
 template<typename Factor>
-std::tuple<MatXf, VecXf, Float> Reducer::linearize(const NearestNeighborSearcher &target_nn_searcher,
-                                                   const PointCloud &source, const SE3f &T_tb, const SE3f &T_bs,
-                                                   std::vector<Factor> &factors) {
+std::tuple<MatXd, VecXd, double> Reducer::linearize(const NearestNeighborSearcher &target_nn_searcher,
+                                                    const PointCloud &source, const SE3f &T_tb, const SE3f &T_bs,
+                                                    std::vector<Factor> &factors) {
     LinearizeSum sum(target_nn_searcher, source, T_tb, T_bs, factors);
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, factors.size(), 8), sum);
     return {sum.H, sum.b, sum.e};
 }
 
 template<typename Factor>
-Float Reducer::error(const NearestNeighborSearcher &target_nn_searcher, const PointCloud &source, const SE3f &T_tb,
-                     const SE3f &T_bs, std::vector<Factor> &factors) {
+double Reducer::error(const NearestNeighborSearcher &target_nn_searcher, const PointCloud &source, const SE3f &T_tb,
+                      const SE3f &T_bs, std::vector<Factor> &factors) {
     ErrorSum<Factor> sum(target_nn_searcher, source, T_tb, T_bs, factors);
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, factors.size(), 8), sum);
     return sum.e;

@@ -5,17 +5,17 @@ namespace lvins::point_cloud_align {
 template<typename Factor>
 Result Optimizer::optimize(const NearestNeighborSearcher &target_nn_searcher,
                            const std::vector<const PointCloud *> &source_point_clouds, const SE3f &init_T_tb,
-                           const std::vector<SE3f> &init_T_bs, const TerminateCriteria &criteria,
-                           std::vector<std::vector<Factor>> &factors) const {
-    Float lambda = init_lambda_;
+                           const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic,
+                           const TerminateCriteria &criteria, std::vector<std::vector<Factor>> &factors) const {
+    double lambda = init_lambda_;
     Result result(init_T_tb, init_T_bs);
 
     // 优化循环
     for (size_t i = 0; i < max_iterations_ && !result.converged; ++i) {
         const long dim = 6 + static_cast<long>(init_T_bs.size()) * 6;
-        MatXf H        = MatXf::Zero(dim, dim);
-        VecXf b        = VecXf::Zero(dim);
-        Float e        = 0.0;
+        MatXd H        = MatXd::Zero(dim, dim);
+        VecXd b        = VecXd::Zero(dim);
+        double e       = 0.0;
 
         // 线性化
         for (size_t j = 0; j < source_point_clouds.size(); ++j) {
@@ -25,11 +25,13 @@ Result Optimizer::optimize(const NearestNeighborSearcher &target_nn_searcher,
             // 组装信息矩阵、信息向量并计算误差值
             const long o_ext = 6 + static_cast<long>(j) * 6;
             H.block<6, 6>(0, 0) += Hj.template block<6, 6>(0, 0);
-            H.block<6, 6>(0, o_ext) += Hj.template block<6, 6>(0, 6);
-            H.block<6, 6>(o_ext, 0) += Hj.template block<6, 6>(6, 0);
-            H.block<6, 6>(o_ext, o_ext) += Hj.template block<6, 6>(6, 6);
             b.head<6>() += bj.template head<6>();
-            b.segment<6>(o_ext) += bj.template segment<6>(6);
+            if (estimate_extrinsic) {
+                H.block<6, 6>(0, o_ext) += Hj.template block<6, 6>(0, 6);
+                H.block<6, 6>(o_ext, 0) += Hj.template block<6, 6>(6, 0);
+                H.block<6, 6>(o_ext, o_ext) += Hj.template block<6, 6>(6, 6);
+                b.segment<6>(o_ext) += bj.template segment<6>(6);
+            }
             e += ej;
         }
 
@@ -37,14 +39,15 @@ Result Optimizer::optimize(const NearestNeighborSearcher &target_nn_searcher,
         bool success = false;
         for (size_t j = 0; j < max_inner_iterations_; ++j) {
             // 带阻尼求解
-            const VecXf delta = (H + lambda * MatXf::Identity(dim, dim)).ldlt().solve(-b);
+            const VecXd delta = (H + lambda * MatXd::Identity(dim, dim)).ldlt().solve(-b);
 
             // 验证求解结果
-            const SE3f new_T_tb = result.T_tb * SE3f::exp(delta.head<6>());
+            const SE3f new_T_tb = result.T_tb * SE3f::exp(delta.head<6>().cast<Float>());
             std::vector<SE3f> new_T_bs;
-            Float new_e = 0.0;
+            double new_e = 0.0;
             for (size_t k = 0; k < source_point_clouds.size(); ++k) {
-                new_T_bs.push_back(result.T_bs[k] * SE3f::exp(delta.segment<6>(6 + static_cast<long>(k) * 6)));
+                const long o_ext = 6 + static_cast<long>(k) * 6;
+                new_T_bs.push_back(result.T_bs[k] * SE3f::exp(delta.segment<6>(o_ext).cast<Float>()));
                 new_e += Reducer::error(target_nn_searcher, *source_point_clouds[k], new_T_tb, new_T_bs[k], factors[k]);
             }
 

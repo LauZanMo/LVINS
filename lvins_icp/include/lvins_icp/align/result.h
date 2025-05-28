@@ -29,9 +29,9 @@ struct Result {
     size_t iterations{0};  ///< 迭代次数
     size_t num_inliers{0}; ///< 采用点数量
 
-    MatXf H;      ///< 信息矩阵，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
-    VecXf b;      ///< 信息向量，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
-    Float e{0.0}; ///< 最终误差
+    MatXd H;       ///< 信息矩阵，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
+    VecXd b;       ///< 信息向量，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
+    double e{0.0}; ///< 最终误差
 };
 
 } // namespace lvins::point_cloud_align

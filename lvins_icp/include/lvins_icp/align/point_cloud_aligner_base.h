@@ -1,24 +1,29 @@
 #pragma once
 
-#include "lvins_common/noise_parameters.h"
+#include "lvins_icp/align/optimizer.h"
 #include "lvins_icp/align/result.h"
+#include "lvins_icp/align/terminate_criteria.h"
 #include "lvins_icp/ann/nearest_neighbor_searcher.h"
 
 namespace lvins {
 
 /**
- * @brief 点云配准器类接口（抽象类）
- * @details 该类为点云配准器的接口类，所有点云配准器都通过YAML配置文件实现动态加载
+ * @brief 点云配准器基类
+ * @details 该类为点云配准器基类，所有点云配准器都通过YAML配置文件实现动态加载
  */
 class PointCloudAlignerBase {
 public:
-    using Ptr    = std::shared_ptr<PointCloudAlignerBase>;
-    using Result = point_cloud_align::Result;
+    using Ptr               = std::shared_ptr<PointCloudAlignerBase>;
+    using Optimizer         = point_cloud_align::Optimizer;
+    using TerminateCriteria = point_cloud_align::TerminateCriteria;
+    using Result            = point_cloud_align::Result;
 
     /**
-     * @brief 默认构造函数
+     * @brief 构造函数
+     * @param optimizer 点云配准优化器
+     * @param criteria 点云配准终止条件
      */
-    PointCloudAlignerBase() = default;
+    PointCloudAlignerBase(const Optimizer &optimizer, const TerminateCriteria &criteria);
 
     /**
      * @brief 默认析构函数
@@ -43,37 +48,51 @@ public:
      * @brief 配准点云
      * @param target_nn_searcher 目标点云的最近邻搜索器
      * @param source_point_clouds 源点云集合
-     * @param noise_params 噪声参数
      * @param init_T_tb 目标点云到载体的初始相对位姿
      * @param init_T_bs 初始雷达外参集合
+     * @param estimate_extrinsic 是否估计雷达外参
      * @return 配准结果
      */
     virtual Result align(const NearestNeighborSearcher &target_nn_searcher,
-                         const std::vector<const PointCloud *> &source_point_clouds,
-                         const NoiseParameters &noise_params, const SE3f &init_T_tb,
-                         const std::vector<SE3f> &init_T_bs) = 0;
+                         const std::vector<const PointCloud *> &source_point_clouds, const SE3f &init_T_tb,
+                         const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic) = 0;
 
     /**
      * @brief 线性化
      * @details 用于向外界（比如ESKF）提供指定状态下的线性化结果
      * @param target_nn_searcher 目标点云的最近邻搜索器
      * @param source_point_clouds 源点云集合
-     * @param noise_params 噪声参数
      * @param T_tb 目标点云到载体的相对位姿
      * @param T_bs 雷达外参集合
-     * @param H 信息矩阵
-     * @param b 信息向量
+     * @param estimate_extrinsic 是否估计雷达外参
+     * @param H 信息矩阵，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
+     * @param b 信息向量，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
      */
     virtual void linearize(const NearestNeighborSearcher &target_nn_searcher,
-                           const std::vector<const PointCloud *> &source_point_clouds,
-                           const NoiseParameters &noise_params, const SE3f &T_tb, const std::vector<SE3f> &T_bs,
-                           MatXf &H, VecXf &b) = 0;
+                           const std::vector<const PointCloud *> &source_point_clouds, const SE3f &T_tb,
+                           const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H, VecXd &b) = 0;
+
+    /**
+     * @brief 获取点云配准优化器
+     * @return 点云配准优化器
+     */
+    [[nodiscard]] const Optimizer &optimizer() const;
+
+    /**
+     * @brief 获取点云配准终止条件
+     * @return 点云配准终止条件
+     */
+    [[nodiscard]] const TerminateCriteria &criteria() const;
 
     /**
      * @brief 打印点云配准器参数
      * @return 点云配准器参数
      */
     [[nodiscard]] virtual std::string print() const = 0;
+
+protected:
+    Optimizer optimizer_;        ///< 点云配准优化器
+    TerminateCriteria criteria_; ///< 点云配准终止条件
 };
 
 } // namespace lvins

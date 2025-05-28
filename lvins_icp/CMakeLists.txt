@@ -22,11 +22,14 @@ add_library(${PROJECT_NAME} SHARED
     src/ann/yaml/nn_searcher_yaml_serialization.cpp
     src/preprocess/voxel_grid_sample.cpp
     src/preprocess/box_filter.cpp
+    src/preprocess/covariance_estimation.cpp
     src/align/point_cloud_aligner_base.cpp
+    src/align/point_cloud_aligner.cpp
     src/align/optimizer.cpp
     src/align/reducer.cpp
     src/align/terminate_criteria.cpp
     src/align/result.cpp
+    src/align/yaml/aligner_yaml_serialization.cpp
     src/factor/gicp_factor.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC

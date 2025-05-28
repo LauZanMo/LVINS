@@ -25,9 +25,9 @@ public:
      * @return 线性化结果（H, b, e）
      */
     template<typename Factor>
-    static std::tuple<MatXf, VecXf, Float> linearize(const NearestNeighborSearcher &target_nn_searcher,
-                                                     const PointCloud &source, const SE3f &T_tb, const SE3f &T_bs,
-                                                     std::vector<Factor> &factors);
+    static std::tuple<MatXd, VecXd, double> linearize(const NearestNeighborSearcher &target_nn_searcher,
+                                                      const PointCloud &source, const SE3f &T_tb, const SE3f &T_bs,
+                                                      std::vector<Factor> &factors);
 
     /**
      * @brief 计算点云配准因子的误差
@@ -40,8 +40,8 @@ public:
      * @return 误差值
      */
     template<typename Factor>
-    static Float error(const NearestNeighborSearcher &target_nn_searcher, const PointCloud &source, const SE3f &T_tb,
-                       const SE3f &T_bs, std::vector<Factor> &factors);
+    static double error(const NearestNeighborSearcher &target_nn_searcher, const PointCloud &source, const SE3f &T_tb,
+                        const SE3f &T_bs, std::vector<Factor> &factors);
 };
 
 } // namespace lvins::point_cloud_align
