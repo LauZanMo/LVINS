@@ -105,6 +105,14 @@ template<typename Task, typename TaskBuffer, typename ExecTasks, typename ExecFu
 bool executeLoop(const NavState &state0, const NavState &state1, Task &task, TaskBuffer &task_buffer,
                  ExecTasks &exec_tasks, const ExecFunc &exec_func) {
     bool exec_flag = false;
+
+    // 首次执行的情况
+    if (!task) {
+        if (!task_buffer.tryPop(task)) {
+            return exec_flag;
+        }
+    }
+
     while (true) {
         // 任务在当前状态区间则执行，晚于当前状态则退出
         if (task->timestamp() > state0.timestamp && task->timestamp() <= state1.timestamp) {

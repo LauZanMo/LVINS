@@ -1,4 +1,6 @@
 #include "lvins_odometry/estimator.h"
+#include "lvins_icp/preprocess/copy.h"
+#include "lvins_icp/preprocess/covariance_estimation.h"
 
 namespace lvins {
 
@@ -42,9 +44,13 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
         LVINS_INFO("No camera in this odometry.");
     }
 
-    // 加载点云预处理器
+    // 初始化点云预处理器
     preprocessor_ = std::make_unique<Preprocessor>(config["preprocessor"]);
     LVINS_INFO("Printing preprocessor parameters:\n{}", *preprocessor_);
+
+    // 初始化点云搜索器
+    point_cloud_searcher_ = NearestNeighborSearcher::loadFromYaml(config["point_cloud_searcher"]);
+    LVINS_INFO("Printing point cloud searcher parameters:\n{}", *point_cloud_searcher_);
 
     // 初始化ESKF
     std::vector<SE3f> T_bs;
@@ -54,6 +60,10 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
         T_bs.insert(T_bs.end(), camera_rig_->Tbs().begin(), camera_rig_->Tbs().end());
     eskf_ = std::make_unique<ESKF>(config["eskf"], *noise_params_, g_w, T_bs);
     LVINS_INFO("Printing ESKF parameters:\n{}", *eskf_);
+
+    // 初始化局部建图器
+    local_mapper_ = NearestNeighborSearcher::loadFromYaml(config["local_mapper"]);
+    LVINS_INFO("Printing local mapper parameters:\n{}", *local_mapper_);
 
     // 加载初始化器
     initializer_ = InitializerBase::loadFromYaml(config["initializer"], g_w);
@@ -68,6 +78,7 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
 
     // 读取估计器配置
     const auto estimator_config = config["estimator"];
+    cov_estimation_neighbors_   = YAML::get<size_t>(estimator_config, "cov_estimation_neighbors");
     min_icp_points_             = YAML::get<size_t>(estimator_config, "min_icp_points");
 }
 
@@ -90,6 +101,7 @@ void Estimator::reset() {
     status_ = EstimatorStatus::INITIALIZING;
     drawer_->reset();
     eskf_->reset();
+    local_mapper_->clear();
 
     // 清空缓冲区
     lidar_frame_bundle_buffer_.clear();
@@ -120,8 +132,14 @@ void Estimator::addImu(const Imu &imu) {
             // 初始化ESKF
             eskf_->initialize(initializer_->navStates(), initializer_->imus());
 
-            // 初始化局部地图
-            for ([[maybe_unused]] const auto &bundle: initializer_->lidarFrameBundles()) {}
+            // 初始化局部地图并绘制
+            for (const auto &bundle: initializer_->lidarFrameBundles()) {
+                for (size_t i = 0; i < bundle->size(); ++i) {
+                    const auto &frame = bundle->frame(i);
+                    local_mapper_->insert(frame.pointCloud(), frame.Twf());
+                }
+                drawer_->updateLidarFrameBundle(bundle->timestamp(), bundle);
+            }
 
             // 更新状态标志位
             status_ = EstimatorStatus::ESTIMATING;
@@ -150,7 +168,9 @@ void Estimator::addPointClouds(int64_t timestamp, const std::vector<RawPointClou
         auto raw_point_cloud = preprocessor_->process(raw_point_clouds[i]);
         lidar_frames[i] = std::make_shared<LidarFrame>(timestamp, lidar_rig_->lidar(i), std::move(raw_point_cloud));
         // TODO: 根据IMU数据进行点云矫正
-        icp_points += lidar_frames[i]->rawPointCloud().size();
+        copy(lidar_frames[i]->rawPointCloud(), lidar_frames[i]->pointCloud());
+        estimateCovariance(lidar_frames[i]->pointCloud(), *point_cloud_searcher_, cov_estimation_neighbors_);
+        icp_points += lidar_frames[i]->pointCloud().size();
     }
     LVINS_STOP_TIMER(lidar_preprocess_timer_);
     LVINS_PRINT_TIMER_MS("Lidar preprocess", lidar_preprocess_timer_);

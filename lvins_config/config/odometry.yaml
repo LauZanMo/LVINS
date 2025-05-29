@@ -31,6 +31,8 @@ drawer:
         current_nav_state: "current_nav_state"
         frame_point_clouds:
             - "lidar0/point_cloud"
+        frame_compress_point_clouds:
+            - "lidar0/compress_point_cloud"
         submap: "submap"
         reset: "reset"
     # 坐标系id
@@ -48,10 +50,32 @@ preprocessor:
         max_voxel_size: 1.0 # 最大体素尺寸（m）
         desire_point_cloud_size: 5000 # 期望点云大小
 
+point_cloud_searcher:
+    type: "ivox"
+    leaf_size: 0.5 # 体素尺寸（m）
+    lru_horizon: 100 # LRU删除阈值
+    lru_clear_cycle: 10 # LRU清除周期
+    search_offsets: 7 # 搜索偏移量
+    voxel_content:
+        type: "flat" # 体素内容类型
+        min_sq_dist_in_cell: 0.01 # 容器中最小的点间距离平方
+        max_num_points_in_cell: 15 # 容器中最大点数
+
 eskf:
     buffer_len: 0.3 # 延迟更新的IMU缓冲区长度（s）
     max_iterations: 10 # 最大迭代次数
     iteration_quit_eps: 1e-3 # 迭代停止的最小步长
+
+local_mapper:
+    type: "ivox"
+    leaf_size: 0.5 # 体素尺寸（m）
+    lru_horizon: 100 # LRU删除阈值
+    lru_clear_cycle: 10 # LRU清除周期
+    search_offsets: 1 # 搜索偏移量
+    voxel_content:
+        type: "flat" # 体素内容类型
+        min_sq_dist_in_cell: 0.01 # 容器中最小的点间距离平方
+        max_num_points_in_cell: 15 # 容器中最大点数
 
 initializer:
     type: "static" # 静态初始化器
@@ -61,4 +85,5 @@ initializer:
         data: [ 1.0, 0.02, 0.2 ] # 参数顺序 [初始化周期（s）、陀螺仪零速阈值（rad/s）、加速度零速阈值（m/s^2）]
 
 estimator:
+    cov_estimation_neighbors: 5 # 点云协方差估计的最近邻数
     min_icp_points: 100 # 进行ICP的最小点数

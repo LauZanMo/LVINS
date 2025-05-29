@@ -4,6 +4,7 @@
 #include "lvins_common/sensor/imu.h"
 #include "lvins_common/time/time_wheel_scheduler.h"
 #include "lvins_common/time/timer.h"
+#include "lvins_icp/ann/nearest_neighbor_searcher.h"
 #include "lvins_lidar/lidar_rig.h"
 #include "lvins_odometry/base/lidar_frame_bundle.h"
 #include "lvins_odometry/drawer_base.h"
@@ -27,7 +28,7 @@ enum class EstimatorStatus {
  */
 class Estimator {
 public:
-    using uPtr = std::unique_ptr<Estimator>;
+    using Ptr = std::unique_ptr<Estimator>;
 
     /**
      * @brief 构造函数
@@ -70,12 +71,14 @@ public:
 
 private:
     // 系统
-    LidarRig::Ptr lidar_rig_;          ///< 激光雷达组
-    CameraRig::Ptr camera_rig_;        ///< 相机组
-    DrawerBase::Ptr drawer_;           ///< 绘制器
-    Preprocessor::Ptr preprocessor_;   ///< 预处理器
-    ESKF::Ptr eskf_;                   ///< 扩展卡尔曼滤波器
-    InitializerBase::Ptr initializer_; ///< 初始化器
+    LidarRig::Ptr lidar_rig_;                           ///< 激光雷达组
+    CameraRig::Ptr camera_rig_;                         ///< 相机组
+    DrawerBase::Ptr drawer_;                            ///< 绘制器
+    Preprocessor::Ptr preprocessor_;                    ///< 预处理器
+    NearestNeighborSearcher::Ptr point_cloud_searcher_; ///< 点云搜索器，用于估计点云协方差
+    ESKF::Ptr eskf_;                                    ///< 扩展卡尔曼滤波器
+    NearestNeighborSearcher::Ptr local_mapper_;         ///< 局部地图（通过最近邻搜索器实现）
+    InitializerBase::Ptr initializer_;                  ///< 初始化器
 
     EstimatorStatus status_{EstimatorStatus::INITIALIZING}; ///< 估计器状态
     std::atomic<size_t> reset_count_{0};                    ///< 重置次数
@@ -91,6 +94,7 @@ private:
     bool acc_in_g_;                     ///< 加速度是否以g为单位
     Float gravity_mag_;                 ///< 重力向量模长
     NoiseParameters::Ptr noise_params_; ///< 噪声参数
+    size_t cov_estimation_neighbors_;   ///< 点云协方差估计的最近邻数
     size_t min_icp_points_;             ///< 进行ICP的最小点数
 };
 
