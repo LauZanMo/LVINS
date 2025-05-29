@@ -6,6 +6,7 @@ namespace lvins {
 
 void estimateCovariance(PointCloud &point_cloud, NearestNeighborSearcher &nn_searcher, size_t num_neighbors) {
     // 嵌入点云
+    nn_searcher.clear();
     nn_searcher.insert(point_cloud, SE3f(Mat44f::Identity()));
 
     const Eigen::DiagonalMatrix<float, 3> diag(1e-3, 1.0, 1.0);

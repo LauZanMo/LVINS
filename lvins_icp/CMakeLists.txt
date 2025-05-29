@@ -23,6 +23,7 @@ add_library(${PROJECT_NAME} SHARED
     src/preprocess/voxel_grid_sample.cpp
     src/preprocess/box_filter.cpp
     src/preprocess/covariance_estimation.cpp
+    src/preprocess/copy.cpp
     src/align/point_cloud_aligner_base.cpp
     src/align/point_cloud_aligner.cpp
     src/align/optimizer.cpp
