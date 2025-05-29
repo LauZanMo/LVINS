@@ -40,7 +40,7 @@ public:
      * @param Ht_Vinv_r IESKF计算中间项，也是非线性优化的b向量
      */
     virtual void observe(const NoiseParameters &noise_params, long dim, const NavState &state,
-                         const std::vector<SE3f> &T_bs, MatXf &Ht_Vinv_H, VecXf &Ht_Vinv_r) = 0;
+                         const std::vector<SE3f> &T_bs, MatXd &Ht_Vinv_H, VecXd &Ht_Vinv_r) const = 0;
 
     /**
      * @brief 结尾处理函数

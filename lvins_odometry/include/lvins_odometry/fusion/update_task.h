@@ -41,7 +41,7 @@ public:
      * @param r 观测残差向量
      */
     virtual void observe(const NoiseParameters &noise_params, long dim, const NavState &state,
-                         const std::vector<SE3f> &T_bs, MatXf &H, MatXf &V, VecXf &r) = 0;
+                         const std::vector<SE3f> &T_bs, MatXd &H, MatXd &V, VecXd &r) const = 0;
 
     /**
      * @brief 结尾处理函数

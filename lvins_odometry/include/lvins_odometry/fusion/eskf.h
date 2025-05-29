@@ -158,8 +158,8 @@ private:
      * @param q_bs_err 外参位姿残差集合
      * @return 投影后的误差协方差矩阵
      */
-    [[nodiscard]] MatXf projectCovariance(const Eigen::Ref<const Vec3f> &q_wb_err,
-                                          const std::vector<Vec3f> &q_bs_err) const;
+    [[nodiscard]] MatXd projectCovariance(const Eigen::Ref<const Vec3d> &q_wb_err,
+                                          const std::vector<Vec3d> &q_bs_err) const;
 
     /**
      * @brief 重新积分
@@ -171,8 +171,8 @@ private:
     std::vector<SE3f> T_bs_, origin_T_bs_; ///< 外参集合
     NavState update_state_;                ///< 当前更新状态
 
-    MatXf P_; ///< 误差协方差矩阵
-    MatXf Q_; ///< 传感器噪声协方差矩阵
+    MatXd P_; ///< 误差协方差矩阵
+    MatXd Q_; ///< 传感器噪声协方差矩阵
 
     NavStateBuffer state_buffer_; ///< 状态数据缓冲区
     ImuBuffer imu_buffer_;        ///< IMU数据缓冲区
@@ -187,7 +187,7 @@ private:
     const NoiseParameters &noise_params_; ///< 噪声参数
     int64_t buffer_len_;                  ///< 缓冲区长度（ns）
     size_t max_iterations_;               ///< 最大迭代次数
-    Float iteration_quit_eps_;            ///< 迭代退出阈值
+    double iteration_quit_eps_;           ///< 迭代退出阈值
     long dim_;                            ///< 状态维度（p v q bg ba g_w ext_p ext_q）
 };
 

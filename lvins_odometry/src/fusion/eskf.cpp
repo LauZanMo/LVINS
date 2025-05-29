@@ -11,15 +11,15 @@ ESKF::ESKF(const YAML::Node &config, const NoiseParameters &noise_params, Vec3f 
     // 初始化参数
     buffer_len_         = static_cast<int64_t>(YAML::get<double>(config, "buffer_len") * 1e9);
     max_iterations_     = YAML::get<size_t>(config, "max_iterations");
-    iteration_quit_eps_ = YAML::get<Float>(config, "iteration_quit_eps");
+    iteration_quit_eps_ = YAML::get<double>(config, "iteration_quit_eps");
     dim_                = O_EXT_P + 6 * static_cast<long>(T_bs_.size());
 
     // 初始化传感器噪声协方差矩阵
-    Q_                         = MatXf::Zero(dim_, dim_);
-    Q_.block<3, 3>(O_V, O_V)   = std::pow(noise_params_.acc_std, 2) * Mat33f::Identity();
-    Q_.block<3, 3>(O_Q, O_Q)   = std::pow(noise_params_.gyr_std, 2) * Mat33f::Identity();
-    Q_.block<3, 3>(O_BG, O_BG) = std::pow(noise_params_.gyr_bias_std, 2) * Mat33f::Identity();
-    Q_.block<3, 3>(O_BA, O_BA) = std::pow(noise_params_.acc_bias_std, 2) * Mat33f::Identity();
+    Q_                         = MatXd::Zero(dim_, dim_);
+    Q_.block<3, 3>(O_V, O_V)   = std::pow(noise_params_.acc_std, 2) * Mat33d::Identity();
+    Q_.block<3, 3>(O_Q, O_Q)   = std::pow(noise_params_.gyr_std, 2) * Mat33d::Identity();
+    Q_.block<3, 3>(O_BG, O_BG) = std::pow(noise_params_.gyr_bias_std, 2) * Mat33d::Identity();
+    Q_.block<3, 3>(O_BA, O_BA) = std::pow(noise_params_.acc_bias_std, 2) * Mat33d::Identity();
 }
 
 YAML::Node ESKF::writeToYaml() const {
@@ -59,7 +59,7 @@ bool checkInitialized(const T &obj) {
 }
 
 void ESKF::initialize(const NavStates &states, const Imus &imus) {
-    LVINS_CHECK(checkInitialized(states) && checkInitialized(imus), "Input states or IMUs should be initialized!");
+    LVINS_CHECK(checkInitialized(states) && checkInitialized(imus), "Input states and IMUs should be initialized!");
     LVINS_CHECK(states.size() == imus.size() && states.front().timestamp == imus.front().timestamp &&
                         states.back().timestamp == imus.back().timestamp,
                 "IMUs timestamp should be aligned with states timestamp!");
@@ -70,21 +70,20 @@ void ESKF::initialize(const NavStates &states, const Imus &imus) {
     update_state_ = states.front();
 
     // 初始化误差协方差矩阵
-    P_                       = MatXf::Zero(dim_, dim_);
-    P_.block<3, 3>(O_P, O_P) = std::pow(noise_params_.prior_pos_std, 2) * Mat33f::Identity();
-    P_.block<3, 3>(O_V, O_V) = std::pow(noise_params_.prior_vel_std, 2) * Mat33f::Identity();
-    P_.block<3, 3>(O_Q, O_Q) = Vec3f(LVINS_FLOAT(std::pow(noise_params_.prior_roll_pitch_std, 2)),
-                                     LVINS_FLOAT(std::pow(noise_params_.prior_roll_pitch_std, 2)),
-                                     LVINS_FLOAT(std::pow(noise_params_.prior_yaw_std, 2)))
-                                       .asDiagonal();
-    P_.block<3, 3>(O_BG, O_BG) = std::pow(noise_params_.prior_gyr_bias_std, 2) * Mat33f::Identity();
-    P_.block<3, 3>(O_BA, O_BA) = std::pow(noise_params_.prior_acc_bias_std, 2) * Mat33f::Identity();
-    P_.block<3, 3>(O_GW, O_GW) = 1e-4 * Mat33f::Identity();
+    P_                       = MatXd::Zero(dim_, dim_);
+    P_.block<3, 3>(O_P, O_P) = std::pow(noise_params_.prior_pos_std, 2) * Mat33d::Identity();
+    P_.block<3, 3>(O_V, O_V) = std::pow(noise_params_.prior_vel_std, 2) * Mat33d::Identity();
+    P_.block<3, 3>(O_Q, O_Q) =
+            Diag3d(std::pow(noise_params_.prior_roll_pitch_std, 2), std::pow(noise_params_.prior_roll_pitch_std, 2),
+                   std::pow(noise_params_.prior_yaw_std, 2));
+    P_.block<3, 3>(O_BG, O_BG) = std::pow(noise_params_.prior_gyr_bias_std, 2) * Mat33d::Identity();
+    P_.block<3, 3>(O_BA, O_BA) = std::pow(noise_params_.prior_acc_bias_std, 2) * Mat33d::Identity();
+    P_.block<3, 3>(O_GW, O_GW) = 1e-4 * Mat33d::Identity();
     for (long i = 0; i < static_cast<long>(T_bs_.size()); ++i) {
         P_.block<3, 3>(O_EXT_P + 6 * i, O_EXT_P + 6 * i) =
-                std::pow(noise_params_.extrinsic_trans_std, 2) * Mat33f::Identity();
+                std::pow(noise_params_.extrinsic_trans_std, 2) * Mat33d::Identity();
         P_.block<3, 3>(O_EXT_Q + 6 * i, O_EXT_Q + 6 * i) =
-                std::pow(noise_params_.extrinsic_rot_std, 2) * Mat33f::Identity();
+                std::pow(noise_params_.extrinsic_rot_std, 2) * Mat33d::Identity();
     }
 }
 
@@ -158,17 +157,18 @@ bool ESKF::propagate(const Imu &imu) {
             const auto &imu1   = imu_buffer_[1];
             const auto &state0 = state_buffer_[0];
             const auto &state1 = state_buffer_[1];
-            const auto dt      = LVINS_FLOAT(imu1.timestamp - imu0.timestamp) * LVINS_FLOAT(1e-9);
+            const auto dt      = static_cast<double>(imu1.timestamp - imu0.timestamp) * 1e-9;
 
             // ESKF预测
-            const Vec3f acc          = state0.T.so3() * (imu1.acc - state0.ba) + g_w_;
-            MatXf F                  = MatXf::Identity(dim_, dim_);
-            F.block<3, 3>(O_P, O_V)  = Mat33f::Identity() * dt;
-            F.block<3, 3>(O_V, O_Q)  = -state1.T.so3().matrix() * SO3f::hat(acc) * dt;
-            F.block<3, 3>(O_V, O_BA) = -state1.T.so3().matrix() * dt;
-            F.block<3, 3>(O_V, O_GW) = Mat33f::Identity() * dt;
-            F.block<3, 3>(O_Q, O_Q)  = SO3f::exp(-(imu1.gyr - state0.bg) * dt).matrix();
-            F.block<3, 3>(O_Q, O_BG) = -Mat33f::Identity() * dt;
+            const Mat33d q1_mat      = state1.T.so3().matrix().cast<double>();
+            const Vec3d acc          = (state0.T.so3() * (imu1.acc - state0.ba) + g_w_).cast<double>();
+            MatXd F                  = MatXd::Identity(dim_, dim_);
+            F.block<3, 3>(O_P, O_V)  = Mat33d::Identity() * dt;
+            F.block<3, 3>(O_V, O_Q)  = -q1_mat * SO3d::hat(acc) * dt;
+            F.block<3, 3>(O_V, O_BA) = -q1_mat * dt;
+            F.block<3, 3>(O_V, O_GW) = Mat33d::Identity() * dt;
+            F.block<3, 3>(O_Q, O_Q)  = SO3d::exp(-(imu1.gyr - state0.bg).cast<double>() * dt).matrix();
+            F.block<3, 3>(O_Q, O_BG) = -Mat33d::Identity() * dt;
 
             P_ = F * P_ * F.transpose() + Q_;
 
@@ -241,55 +241,55 @@ std::string ESKF::print() const {
 
 void ESKF::update(const UpdateTaskPtr &task) {
     // 计算观测量
-    MatXf H, V;
-    VecXf r;
+    MatXd H, V;
+    VecXd r;
     task->observe(noise_params_, dim_, state_buffer_[1], T_bs_, H, V, r);
 
     // 计算卡尔曼增益和残差
-    const MatXf K           = P_ * H.transpose() * (H * P_ * H.transpose() + V).inverse();
-    const VecXf delta_state = K * r;
+    const MatXd K           = P_ * H.transpose() * (H * P_ * H.transpose() + V).inverse();
+    const VecXd delta_state = K * r;
 
     // 更新名义状态和误差协方差矩阵
-    correctNominal(delta_state);
-    std::vector<Vec3f> q_bs_err;
+    correctNominal(delta_state.cast<Float>());
+    std::vector<Vec3d> q_bs_err;
     for (long i = 0; i < static_cast<long>(T_bs_.size()); ++i) {
         q_bs_err.emplace_back(delta_state.segment<3>(O_EXT_Q + 6 * i));
     }
-    P_ = (MatXf::Identity(dim_, dim_) - K * H) * P_;
+    P_ = (MatXd::Identity(dim_, dim_) - K * H) * P_;
     P_ = projectCovariance(delta_state.segment<3>(O_Q), q_bs_err);
 }
 
 void ESKF::update(const iUpdateTaskPtr &task) {
     // 记录初值
     const auto &state     = state_buffer_[1];
-    const SO3f q_wb_begin = state.T.so3();
-    std::vector<SO3f> q_bs_begin;
+    const SO3d q_wb_begin = state.T.so3().cast<double>();
+    std::vector<SO3d> q_bs_begin;
     for (auto &T_bs: T_bs_) {
-        q_bs_begin.push_back(T_bs.so3());
+        q_bs_begin.push_back(T_bs.so3().cast<double>());
     }
 
     // 迭代循环
-    MatXf Ht_Vinv_H;
-    VecXf Ht_Vinv_r;
-    MatXf Pk, Qk;
+    MatXd Ht_Vinv_H;
+    VecXd Ht_Vinv_r;
+    MatXd Pk, Qk;
     for (size_t iter = 0; iter < max_iterations_; ++iter) {
         // 计算观测量
         task->observe(noise_params_, dim_, state, T_bs_, Ht_Vinv_H, Ht_Vinv_r);
 
         // 投影此次迭代的误差协方差矩阵
-        const Vec3f q_wb_err = (state.T.so3().inverse() * q_wb_begin).log();
-        std::vector<Vec3f> q_bs_err;
+        const Vec3d q_wb_err = (state.T.so3().inverse().cast<double>() * q_wb_begin).log();
+        std::vector<Vec3d> q_bs_err;
         for (size_t i = 0; i < T_bs_.size(); ++i) {
-            q_bs_err.push_back((T_bs_[i].so3().inverse() * q_bs_begin[i]).log());
+            q_bs_err.push_back((T_bs_[i].so3().inverse().cast<double>() * q_bs_begin[i]).log());
         }
         Pk = projectCovariance(q_wb_err, q_bs_err);
 
         // 计算中间量和残差
         Qk                      = (Pk.inverse() + Ht_Vinv_H).inverse();
-        const VecXf delta_state = Qk * Ht_Vinv_r;
+        const VecXd delta_state = Qk * Ht_Vinv_r;
 
         // 更新名义状态
-        correctNominal(delta_state);
+        correctNominal(delta_state.cast<Float>());
 
         // 误差小于阈值则退出
         if (delta_state.norm() < iteration_quit_eps_) {
@@ -298,11 +298,11 @@ void ESKF::update(const iUpdateTaskPtr &task) {
     }
 
     // 更新误差协方差矩阵
-    P_                   = (MatXf::Identity(dim_, dim_) - Qk * Ht_Vinv_H) * Pk;
-    const Vec3f q_wb_err = (state.T.so3().inverse() * q_wb_begin).log();
-    std::vector<Vec3f> q_bs_err;
+    P_                   = (MatXd::Identity(dim_, dim_) - Qk * Ht_Vinv_H) * Pk;
+    const Vec3d q_wb_err = (state.T.so3().inverse().cast<double>() * q_wb_begin).log();
+    std::vector<Vec3d> q_bs_err;
     for (size_t i = 0; i < T_bs_.size(); ++i) {
-        q_bs_err.push_back((T_bs_[i].so3().inverse() * q_bs_begin[i]).log());
+        q_bs_err.push_back((T_bs_[i].so3().inverse().cast<double>() * q_bs_begin[i]).log());
     }
     P_ = projectCovariance(q_wb_err, q_bs_err);
 }
@@ -328,12 +328,12 @@ void ESKF::correctNominal(const VecXf &delta_state) {
     }
 }
 
-MatXf ESKF::projectCovariance(const Eigen::Ref<const Vec3f> &q_wb_err, const std::vector<Vec3f> &q_bs_err) const {
+MatXd ESKF::projectCovariance(const Eigen::Ref<const Vec3d> &q_wb_err, const std::vector<Vec3d> &q_bs_err) const {
     // 计算雅可比矩阵
-    MatXf J = MatXf::Identity(dim_, dim_);
-    J.block<3, 3>(O_Q, O_Q) -= 0.5 * SO3f::hat(q_wb_err);
+    MatXd J = MatXd::Identity(dim_, dim_);
+    J.block<3, 3>(O_Q, O_Q) -= 0.5 * SO3d::hat(q_wb_err);
     for (long i = 0; i < static_cast<long>(q_bs_err.size()); ++i) {
-        J.block<3, 3>(O_EXT_Q + 6 * i, O_EXT_Q + 6 * i) -= 0.5 * SO3f::hat(q_bs_err[i]);
+        J.block<3, 3>(O_EXT_Q + 6 * i, O_EXT_Q + 6 * i) -= 0.5 * SO3d::hat(q_bs_err[i]);
     }
 
     // 投影误差协方差矩阵

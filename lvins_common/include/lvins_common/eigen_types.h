@@ -27,6 +27,7 @@ using MatXf  = Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic>;
 using MatXd  = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 
 using Diag2f = Eigen::DiagonalMatrix<Float, 2>;
+using Diag3d = Eigen::DiagonalMatrix<double, 3>;
 
 using Quatf = Eigen::Quaternion<Float>;
 using SO3f  = Sophus::SO3<Float>;
