@@ -44,13 +44,10 @@ DrawerRviz::DrawerRviz(const YAML::Node &config, rclcpp::Node &node) {
     tf_broadcaster_  = std::make_unique<tf2_ros::TransformBroadcaster>(node);
 }
 
-void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::Ptr &bundle) {
-    LVINS_CHECK(frame_point_cloud_pubs_.size() == bundle->size(),
-                "Publishers and frame bundle should have the same size!");
+void DrawerRviz::drawNavState(int64_t timestamp, const NavState &state) {
+    const rclcpp::Time ros_timestamp(timestamp);
 
     // 发布导航状态
-    rclcpp::Time ros_timestamp(timestamp);
-    const auto &state = bundle->state();
     if (current_nav_state_pub_->get_subscription_count() != 0) {
         nav_msgs::msg::Odometry odom_msg;
         odom_msg.header.stamp            = ros_timestamp;
@@ -82,7 +79,16 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
     trans_msg.transform.rotation.z    = state.T.unit_quaternion().z();
     trans_msg.transform.rotation.w    = state.T.unit_quaternion().w();
     tf_broadcaster_->sendTransform(trans_msg);
+}
 
+void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::Ptr &bundle) {
+    LVINS_CHECK(frame_point_cloud_pubs_.size() == bundle->size(),
+                "Publishers and frame bundle should have the same size!");
+
+    const rclcpp::Time ros_timestamp(timestamp);
+
+    // 发布TF
+    geometry_msgs::msg::TransformStamped trans_msg;
     for (size_t i = 0; i < bundle->size(); ++i) {
         const auto &T_bs                  = bundle->frame(i).Tbs();
         trans_msg.header.frame_id         = imu_frame_id_;

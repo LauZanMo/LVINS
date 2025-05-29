@@ -35,6 +35,13 @@ public:
     void reset();
 
     /**
+     * @brief 更新导航状态
+     * @param timestamp 导航状态时间戳
+     * @param state 导航状态
+     */
+    void updateNavState(int64_t timestamp, const NavState &state);
+
+    /**
      * @brief 更新雷达帧束
      * @param timestamp 雷达帧束时间戳
      * @param bundle 雷达帧束
@@ -48,6 +55,13 @@ public:
     void updateResetTimes(size_t times);
 
 protected:
+    /**
+     * @brief 绘制导航状态
+     * @param timestamp 导航状态时间戳
+     * @param state 导航状态
+     */
+    virtual void drawNavState(int64_t timestamp, const NavState &state) = 0;
+
     /**
      * @brief 绘制雷达帧束
      * @param timestamp 雷达帧束时间戳

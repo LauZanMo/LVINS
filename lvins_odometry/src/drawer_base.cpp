@@ -31,6 +31,12 @@ void DrawerBase::reset() {
     reset_ = true;
 }
 
+void DrawerBase::updateNavState(int64_t timestamp, const NavState &state) {
+    draw_task_buffer_.push([this, timestamp, state] {
+        drawNavState(timestamp, state);
+    });
+}
+
 void DrawerBase::updateLidarFrameBundle(int64_t timestamp, const LidarFrameBundle::Ptr &bundle) {
     draw_task_buffer_.push([this, timestamp, bundle] {
         drawLidarFrameBundle(timestamp, bundle);

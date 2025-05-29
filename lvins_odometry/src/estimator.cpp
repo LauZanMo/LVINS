@@ -141,6 +141,9 @@ void Estimator::addImu(const Imu &imu) {
                 drawer_->updateLidarFrameBundle(bundle->timestamp(), bundle);
             }
 
+            // 绘制初始导航状态
+            drawer_->updateNavState(eskf_->predictState().timestamp, eskf_->predictState());
+
             // 更新状态标志位
             status_ = EstimatorStatus::ESTIMATING;
         }
@@ -153,6 +156,9 @@ void Estimator::addImu(const Imu &imu) {
         while (lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
             // 构建观测函数，并添加到ESKF
         }
+
+        // 绘制导航状态
+        drawer_->updateNavState(eskf_->predictState().timestamp, eskf_->predictState());
     }
 }
 

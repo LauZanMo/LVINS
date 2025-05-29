@@ -26,6 +26,13 @@ public:
 
 private:
     /**
+     * @brief 绘制导航状态
+     * @param timestamp 导航状态时间戳
+     * @param state 导航状态
+     */
+    void drawNavState(int64_t timestamp, const NavState &state) override;
+
+    /**
      * @brief 绘制雷达帧束
      * @param timestamp 雷达帧束时间戳
      * @param bundle 雷达帧束
