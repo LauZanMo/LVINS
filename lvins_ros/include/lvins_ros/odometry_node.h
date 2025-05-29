@@ -47,7 +47,7 @@ public:
     void imageCallback(size_t idx, const sensor_msgs::msg::Image::ConstSharedPtr &msg);
 
 private:
-    lvins::Estimator::uPtr estimator_; ///< 估计器
+    lvins::Estimator::Ptr estimator_; ///< 估计器
 
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;                               ///< IMU信息订阅者
     std::vector<rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> point_cloud_subs_; ///< 点云信息订阅者
@@ -56,8 +56,8 @@ private:
     rclcpp::CallbackGroup::SharedPtr image_callback_group_;                                        ///< 图像信息回调组
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reset_srv_;                                 ///< 重置服务
 
-    lvins::MessageSynchronizer<sensor_msgs::msg::PointCloud2>::uPtr point_cloud_sync_; ///< 点云同步器
-    lvins::MessageSynchronizer<sensor_msgs::msg::Image>::uPtr image_sync_;             ///< 图像同步器
+    lvins::MessageSynchronizer<sensor_msgs::msg::PointCloud2>::Ptr point_cloud_sync_; ///< 点云同步器
+    lvins::MessageSynchronizer<sensor_msgs::msg::Image>::Ptr image_sync_;             ///< 图像同步器
 
     std::vector<std::string> lidar_types_; ///< 雷达类型
 };

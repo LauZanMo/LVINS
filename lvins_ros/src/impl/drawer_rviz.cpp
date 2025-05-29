@@ -10,8 +10,10 @@ DrawerRviz::DrawerRviz(const YAML::Node &config, rclcpp::Node &node) {
     const auto topic_config             = config["topic"];
     const auto current_nav_state_topic  = YAML::get<std::string>(topic_config, "current_nav_state");
     const auto frame_point_cloud_topics = YAML::get<std::vector<std::string>>(topic_config, "frame_point_clouds");
-    const auto submap_topic             = YAML::get<std::string>(topic_config, "submap");
-    const auto reset_topic              = YAML::get<std::string>(topic_config, "reset");
+    const auto frame_compress_point_cloud_topics =
+            YAML::get<std::vector<std::string>>(topic_config, "frame_compress_point_clouds");
+    const auto submap_topic = YAML::get<std::string>(topic_config, "submap");
+    const auto reset_topic  = YAML::get<std::string>(topic_config, "reset");
 
     // 获取坐标系id参数
     const auto frame_id_config = config["frame_id"];
@@ -22,6 +24,8 @@ DrawerRviz::DrawerRviz(const YAML::Node &config, rclcpp::Node &node) {
     // 执行必要的检查
     LVINS_CHECK(frame_point_cloud_topics.size() == lidar_frame_ids_.size(),
                 "The size of frame point clouds and lidars should be the same!");
+    LVINS_CHECK(frame_compress_point_cloud_topics.size() == lidar_frame_ids_.size(),
+                "The size of frame compress point clouds and lidars should be the same!");
 
     // 设置服务质量（QoS）
     rclcpp::QoS qos(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_LAST, 100));
@@ -32,6 +36,9 @@ DrawerRviz::DrawerRviz(const YAML::Node &config, rclcpp::Node &node) {
     current_nav_state_pub_ = node.create_publisher<nav_msgs::msg::Odometry>(current_nav_state_topic, qos);
     for (const auto &topic: frame_point_cloud_topics) {
         frame_point_cloud_pubs_.push_back(node.create_publisher<sensor_msgs::msg::PointCloud2>(topic, qos));
+    }
+    for (const auto &topic: frame_compress_point_cloud_topics) {
+        frame_compress_point_cloud_pubs_.push_back(node.create_publisher<sensor_msgs::msg::PointCloud2>(topic, qos));
     }
     reset_times_pub_ = node.create_publisher<std_msgs::msg::UInt64>(reset_topic, qos);
     tf_broadcaster_  = std::make_unique<tf2_ros::TransformBroadcaster>(node);
@@ -92,16 +99,30 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
 
     // 发布点云
     for (size_t i = 0; i < bundle->size(); ++i) {
+        // 原始点云
         if (frame_point_cloud_pubs_[i]->get_subscription_count() != 0) {
-            const auto &frame           = bundle->frame(i);
-            PointCloud::Ptr point_cloud = pcl::make_shared<PointCloud>();
-            pcl::transformPointCloud(frame.pointCloud(), *point_cloud, frame.Twf().matrix());
+            const auto &frame      = bundle->frame(i);
+            const auto point_cloud = pcl::make_shared<RawPointCloud>();
+            pcl::transformPointCloud(frame.rawPointCloud(), *point_cloud, frame.Twf().matrix());
 
             sensor_msgs::msg::PointCloud2 msg;
             pcl::toROSMsg(*point_cloud, msg);
             msg.header.stamp    = ros_timestamp;
             msg.header.frame_id = map_frame_id_;
             frame_point_cloud_pubs_[i]->publish(msg);
+        }
+
+        // 压缩点云
+        if (frame_compress_point_cloud_pubs_[i]->get_subscription_count() != 0) {
+            const auto &frame      = bundle->frame(i);
+            const auto point_cloud = pcl::make_shared<PointCloud>();
+            pcl::transformPointCloud(frame.pointCloud(), *point_cloud, frame.Twf().matrix());
+
+            sensor_msgs::msg::PointCloud2 msg;
+            pcl::toROSMsg(*point_cloud, msg);
+            msg.header.stamp    = ros_timestamp;
+            msg.header.frame_id = map_frame_id_;
+            frame_compress_point_cloud_pubs_[i]->publish(msg);
         }
     }
 }

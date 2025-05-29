@@ -34,7 +34,7 @@ RawPointCloud::Ptr convert(OusterPointCloud &src) {
     ret->height   = src.height;
     ret->is_dense = src.is_dense;
     ret->resize(src.size());
-    auto ref_timestamp = static_cast<double>(src.header.stamp) * 1e3;
+    const auto ref_timestamp = static_cast<double>(src.header.stamp) * 1e3;
     for (size_t i = 0; i < src.size(); ++i) {
         ret->points[i].x         = src.points[i].x;
         ret->points[i].y         = src.points[i].y;
@@ -64,7 +64,7 @@ RawPointCloud::Ptr convert(VelodynePointCloud &src) {
     ret->height   = src.height;
     ret->is_dense = src.is_dense;
     ret->resize(src.size());
-    auto ref_timestamp = static_cast<double>(src.header.stamp) * 1e3;
+    const auto ref_timestamp = static_cast<double>(src.header.stamp) * 1e3;
     for (size_t i = 0; i < src.size(); ++i) {
         ret->points[i].x         = src.points[i].x;
         ret->points[i].y         = src.points[i].y;

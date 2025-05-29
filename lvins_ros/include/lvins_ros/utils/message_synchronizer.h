@@ -15,7 +15,7 @@ namespace lvins {
 template<typename T>
 class MessageSynchronizer {
 public:
-    using uPtr       = std::unique_ptr<MessageSynchronizer>;
+    using Ptr        = std::unique_ptr<MessageSynchronizer>;
     using MessagePtr = typename T::ConstSharedPtr;
 
     /**

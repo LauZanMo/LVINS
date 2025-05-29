@@ -40,6 +40,7 @@ private:
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr current_nav_state_pub_;
     std::vector<rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> frame_point_cloud_pubs_;
+    std::vector<rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> frame_compress_point_cloud_pubs_;
     rclcpp::Publisher<std_msgs::msg::UInt64>::SharedPtr reset_times_pub_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
