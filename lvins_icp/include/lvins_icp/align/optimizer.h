@@ -40,6 +40,24 @@ public:
                     std::vector<std::vector<Factor>> &factors) const;
 
     /**
+     * @brief 线性化
+     * @tparam Factor 点云配准因子类型
+     * @param target_nn_searcher 目标点云的最近邻搜索器
+     * @param source_point_clouds 源点云集合
+     * @param T_tb 目标点云到载体的相对位姿
+     * @param T_bs 雷达外参集合
+     * @param estimate_extrinsic 是否估计雷达外参
+     * @param H 信息矩阵，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
+     * @param b 信息向量，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
+     * @param factors 点云配准因子集合
+     */
+    template<typename Factor>
+    void linearize(const NearestNeighborSearcher &target_nn_searcher,
+                   const std::vector<const PointCloud *> &source_point_clouds, const SE3f &T_tb,
+                   const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H, VecXd &b,
+                   std::vector<std::vector<Factor>> &factors) const;
+
+    /**
      * @brief 获取最大迭代次数
      * @return 最大迭代次数
      */

@@ -31,9 +31,9 @@ public:
      * @param estimate_extrinsic 是否估计雷达外参
      * @return 配准结果
      */
-    Result align(const NearestNeighborSearcher &target_nn_searcher,
-                 const std::vector<const PointCloud *> &source_point_clouds, const SE3f &init_T_tb,
-                 const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic) override;
+    [[nodiscard]] Result align(const NearestNeighborSearcher &target_nn_searcher,
+                               const std::vector<const PointCloud *> &source_point_clouds, const SE3f &init_T_tb,
+                               const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic) const override;
 
     /**
      * @brief 线性化
@@ -48,7 +48,7 @@ public:
      */
     void linearize(const NearestNeighborSearcher &target_nn_searcher,
                    const std::vector<const PointCloud *> &source_point_clouds, const SE3f &T_tb,
-                   const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H, VecXd &b) override;
+                   const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H, VecXd &b) const override;
 
     /**
      * @brief 获取点云配准因子设置

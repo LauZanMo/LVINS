@@ -53,9 +53,10 @@ public:
      * @param estimate_extrinsic 是否估计雷达外参
      * @return 配准结果
      */
-    virtual Result align(const NearestNeighborSearcher &target_nn_searcher,
-                         const std::vector<const PointCloud *> &source_point_clouds, const SE3f &init_T_tb,
-                         const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic) = 0;
+    [[nodiscard]] virtual Result align(const NearestNeighborSearcher &target_nn_searcher,
+                                       const std::vector<const PointCloud *> &source_point_clouds,
+                                       const SE3f &init_T_tb, const std::vector<SE3f> &init_T_bs,
+                                       bool estimate_extrinsic) const = 0;
 
     /**
      * @brief 线性化
@@ -70,7 +71,7 @@ public:
      */
     virtual void linearize(const NearestNeighborSearcher &target_nn_searcher,
                            const std::vector<const PointCloud *> &source_point_clouds, const SE3f &T_tb,
-                           const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H, VecXd &b) = 0;
+                           const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H, VecXd &b) const = 0;
 
     /**
      * @brief 获取点云配准优化器

@@ -34,7 +34,7 @@ public:
      * @brief 构造函数
      * @param setting GICP因子设置
      */
-    explicit GICPFactor(Setting *setting);
+    explicit GICPFactor(const Setting *setting);
 
     /**
      * @brief 默认析构函数
@@ -79,7 +79,7 @@ private:
     size_t source_index_{std::numeric_limits<size_t>::max()}; ///< 源点索引
     Mat33d point_cov_{Mat33d::Zero()};                        ///< 协方差矩阵
 
-    Setting *setting_; ///< 设置
+    const Setting *setting_; ///< 设置
 };
 
 } // namespace lvins

@@ -96,4 +96,30 @@ Result Optimizer::optimize(const NearestNeighborSearcher &target_nn_searcher,
     return result;
 }
 
+template<typename Factor>
+void Optimizer::linearize(const NearestNeighborSearcher &target_nn_searcher,
+                          const std::vector<const PointCloud *> &source_point_clouds, const SE3f &T_tb,
+                          const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H, VecXd &b,
+                          std::vector<std::vector<Factor>> &factors) const {
+    const long dim = 6 + static_cast<long>(T_bs.size()) * 6;
+    H              = MatXd::Zero(dim, dim);
+    b              = VecXd::Zero(dim);
+
+    // 线性化
+    for (size_t i = 0; i < source_point_clouds.size(); ++i) {
+        auto [Hi, bi, ei] = Reducer::linearize(target_nn_searcher, *source_point_clouds[i], T_tb, T_bs[i], factors[i]);
+
+        // 组装信息矩阵、信息向量
+        const long o_ext = 6 + static_cast<long>(i) * 6;
+        H.block<6, 6>(0, 0) += Hi.template block<6, 6>(0, 0);
+        b.head<6>() += bi.template head<6>();
+        if (estimate_extrinsic) {
+            H.block<6, 6>(0, o_ext) += Hi.template block<6, 6>(0, 6);
+            H.block<6, 6>(o_ext, 0) += Hi.template block<6, 6>(6, 0);
+            H.block<6, 6>(o_ext, o_ext) += Hi.template block<6, 6>(6, 6);
+            b.segment<6>(o_ext) += bi.template segment<6>(6);
+        }
+    }
+}
+
 } // namespace lvins::point_cloud_align

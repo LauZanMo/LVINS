@@ -9,7 +9,7 @@ std::string GICPFactor::Setting::print() const {
                         max_search_sq_dist);
 }
 
-GICPFactor::GICPFactor(Setting *setting) : setting_(setting) {
+GICPFactor::GICPFactor(const Setting *setting) : setting_(setting) {
     LVINS_CHECK(setting_, "Setting should not be nullptr!");
 }
 

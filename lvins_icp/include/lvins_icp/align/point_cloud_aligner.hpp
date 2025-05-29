@@ -11,7 +11,7 @@ template<typename Factor>
 PointCloudAlignerBase::Result
 PointCloudAligner<Factor>::align(const NearestNeighborSearcher &target_nn_searcher,
                                  const std::vector<const PointCloud *> &source_point_clouds, const SE3f &init_T_tb,
-                                 const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic) {
+                                 const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic) const {
     LVINS_CHECK(source_point_clouds.size() == init_T_bs.size(),
                 "The number of source point clouds ({}) should match the number of initial extrinsics ({})!",
                 source_point_clouds.size(), init_T_bs.size());
@@ -32,9 +32,19 @@ PointCloudAligner<Factor>::align(const NearestNeighborSearcher &target_nn_search
 template<typename Factor>
 void PointCloudAligner<Factor>::linearize(const NearestNeighborSearcher &target_nn_searcher,
                                           const std::vector<const PointCloud *> &source_point_clouds, const SE3f &T_tb,
-                                          const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H, VecXd &b) {
-    LVINS_INFO("Not implemented!");
-    // TODO: 实现紧组合接口
+                                          const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H,
+                                          VecXd &b) const {
+    LVINS_CHECK(source_point_clouds.size() == T_bs.size(),
+                "The number of source point clouds ({}) should match the number of extrinsics ({})!",
+                source_point_clouds.size(), T_bs.size());
+
+    // 初始化因子
+    std::vector<std::vector<Factor>> factors(source_point_clouds.size());
+    for (size_t i = 0; i < source_point_clouds.size(); ++i) {
+        factors[i].resize(source_point_clouds[i]->size(), Factor(&factor_setting_));
+    }
+
+    return optimizer_.linearize(target_nn_searcher, source_point_clouds, T_tb, T_bs, estimate_extrinsic, H, b, factors);
 }
 
 template<typename Factor>
