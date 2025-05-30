@@ -4,6 +4,7 @@
 #include "lvins_common/sensor/imu.h"
 #include "lvins_common/time/time_wheel_scheduler.h"
 #include "lvins_common/time/timer.h"
+#include "lvins_icp/align/point_cloud_aligner_base.h"
 #include "lvins_icp/ann/nearest_neighbor_searcher.h"
 #include "lvins_lidar/lidar_rig.h"
 #include "lvins_odometry/base/lidar_frame_bundle.h"
@@ -76,6 +77,7 @@ private:
     DrawerBase::Ptr drawer_;                            ///< 绘制器
     Preprocessor::Ptr preprocessor_;                    ///< 预处理器
     NearestNeighborSearcher::Ptr point_cloud_searcher_; ///< 点云搜索器，用于估计点云协方差
+    PointCloudAlignerBase::Ptr point_cloud_aligner_;    ///< 点云配准器
     ESKF::Ptr eskf_;                                    ///< 扩展卡尔曼滤波器
     NearestNeighborSearcher::Ptr local_mapper_;         ///< 局部地图（通过最近邻搜索器实现）
     InitializerBase::Ptr initializer_;                  ///< 初始化器
@@ -96,6 +98,8 @@ private:
     NoiseParameters::Ptr noise_params_; ///< 噪声参数
     size_t cov_estimation_neighbors_;   ///< 点云协方差估计的最近邻数
     size_t min_icp_points_;             ///< 进行ICP的最小点数
+    double lidar_fusion_ratio_;         ///< 雷达融合比例
+    bool estimate_extrinsic_;           ///< 是否估计外参
 };
 
 } // namespace lvins

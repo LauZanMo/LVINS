@@ -1,6 +1,7 @@
 #include "lvins_odometry/estimator.h"
 #include "lvins_icp/preprocess/copy.h"
 #include "lvins_icp/preprocess/covariance_estimation.h"
+#include "lvins_odometry/fusion/update_lidar_frame_bundle.h"
 
 namespace lvins {
 
@@ -52,6 +53,10 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
     point_cloud_searcher_ = NearestNeighborSearcher::loadFromYaml(config["point_cloud_searcher"]);
     LVINS_INFO("Printing point cloud searcher parameters:\n{}", *point_cloud_searcher_);
 
+    // 初始化点云配准器
+    point_cloud_aligner_ = PointCloudAlignerBase::loadFromYaml(config["point_cloud_aligner"]);
+    LVINS_INFO("Printing point cloud aligner parameters:\n{}", *point_cloud_aligner_);
+
     // 初始化ESKF
     std::vector<SE3f> T_bs;
     if (lidar_rig_)
@@ -80,6 +85,8 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
     const auto estimator_config = config["estimator"];
     cov_estimation_neighbors_   = YAML::get<size_t>(estimator_config, "cov_estimation_neighbors");
     min_icp_points_             = YAML::get<size_t>(estimator_config, "min_icp_points");
+    lidar_fusion_ratio_         = YAML::get<double>(estimator_config, "lidar_fusion_ratio");
+    estimate_extrinsic_         = YAML::get<bool>(estimator_config, "estimate_extrinsic");
 }
 
 Estimator::~Estimator() {
@@ -149,12 +156,16 @@ void Estimator::addImu(const Imu &imu) {
         }
     } else if (status_ == EstimatorStatus::ESTIMATING) {
         if (eskf_->propagate(input)) {
-            // 更新对应updateState时间戳的帧束，并向增量地图嵌入点云
+            LVINS_INFO("Get update at {}.", eskf_->updateState().timestamp);
         }
 
         LidarFrameBundle::Ptr lidar_frame_bundle;
         while (lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
             // 构建观测函数，并添加到ESKF
+            const auto task = std::make_shared<eskf::UpdateLidarFrameBundle>(
+                    lidar_frame_bundle->timestamp(), lidar_frame_bundle, *point_cloud_aligner_, *local_mapper_,
+                    *drawer_, 0, lidar_fusion_ratio_, estimate_extrinsic_);
+            eskf_->addUpdateTask(task);
         }
 
         // 绘制导航状态

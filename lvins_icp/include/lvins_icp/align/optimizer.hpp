@@ -87,7 +87,7 @@ Result Optimizer::optimize(const NearestNeighborSearcher &target_nn_searcher,
     }
 
     // 计算采用点数量
-    for (size_t i = 0; i < source_point_clouds.size(); ++i) {
+    for (size_t i = 0; i < factors.size(); ++i) {
         result.num_inliers += std::count_if(factors[i].begin(), factors[i].end(), [](const auto &factor) {
             return factor.isInlier();
         });

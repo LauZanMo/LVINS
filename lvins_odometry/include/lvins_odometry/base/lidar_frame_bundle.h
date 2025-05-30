@@ -93,6 +93,12 @@ public:
     [[nodiscard]] const LidarFrame &frame(size_t idx) const;
 
     /**
+     * @brief 获取帧束中的点云指针集合
+     * @return 帧束中的点云指针集合
+     */
+    [[nodiscard]] std::vector<const PointCloud *> pointClouds() const;
+
+    /**
      * @brief 打印帧束信息
      * @return 帧束信息
      */

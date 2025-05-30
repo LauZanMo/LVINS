@@ -60,7 +60,7 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
 
     // 初始化估计器
     DrawerBase::Ptr drawer = std::make_unique<DrawerRviz>(config["drawer"], *this);
-    estimator_              = std::make_unique<Estimator>(config, std::move(drawer));
+    estimator_             = std::make_unique<Estimator>(config, std::move(drawer));
 
     // 设置服务质量（QoS）
     rclcpp::QoS qos(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_LAST, 1000));

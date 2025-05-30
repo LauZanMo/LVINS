@@ -77,6 +77,14 @@ const LidarFrame &LidarFrameBundle::frame(size_t idx) const {
     return *frames_[idx];
 }
 
+std::vector<const PointCloud *> LidarFrameBundle::pointClouds() const {
+    std::vector<const PointCloud *> point_clouds;
+    for (const auto &frame: frames_) {
+        point_clouds.push_back(&frame->pointCloud());
+    }
+    return point_clouds;
+}
+
 std::string LidarFrameBundle::print() const {
     std::string ret;
     auto end = LVINS_FORMAT_TO(std::back_inserter(ret), "Lidar frame bundle #{}:", LVINS_GROUP_DIGITS(id_));

@@ -25,6 +25,7 @@ add_library(${PROJECT_NAME} SHARED
     src/fusion/update_task.cpp
     src/fusion/iterative_update_task.cpp
     src/fusion/ins_helper.cpp
+    src/fusion/update_lidar_frame_bundle.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

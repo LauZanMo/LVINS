@@ -66,12 +66,14 @@ public:
      * @param T_tb 目标点云到载体的相对位姿
      * @param T_bs 雷达外参集合
      * @param estimate_extrinsic 是否估计雷达外参
+     * @param num_inliers 每个点云的有效点数量
      * @param H 信息矩阵，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
      * @param b 信息向量，顺序: [p_tb, q_tb, p_bs0, q_bs0, ...]
      */
     virtual void linearize(const NearestNeighborSearcher &target_nn_searcher,
                            const std::vector<const PointCloud *> &source_point_clouds, const SE3f &T_tb,
-                           const std::vector<SE3f> &T_bs, bool estimate_extrinsic, MatXd &H, VecXd &b) const = 0;
+                           const std::vector<SE3f> &T_bs, bool estimate_extrinsic, std::vector<size_t> &num_inliers,
+                           MatXd &H, VecXd &b) const = 0;
 
     /**
      * @brief 获取点云配准优化器

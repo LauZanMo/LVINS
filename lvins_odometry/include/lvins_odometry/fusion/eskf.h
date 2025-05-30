@@ -125,8 +125,8 @@ public:
 
     // 各状态量在状态向量中的起点索引
     static constexpr long O_P     = 0;
-    static constexpr long O_V     = 3;
-    static constexpr long O_Q     = 6;
+    static constexpr long O_Q     = O_P + 3;
+    static constexpr long O_V     = 6;
     static constexpr long O_BG    = 9;
     static constexpr long O_BA    = 12;
     static constexpr long O_GW    = 15;

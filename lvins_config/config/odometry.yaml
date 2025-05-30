@@ -61,6 +61,19 @@ point_cloud_searcher:
         min_sq_dist_in_cell: 0.01 # 容器中最小的点间距离平方
         max_num_points_in_cell: 15 # 容器中最大点数
 
+point_cloud_aligner:
+    optimizer:
+        max_iterations: 10 # 最大迭代次数
+        max_inner_iterations: 10 # 最大内部迭代次数（lambda迭代）
+        init_lambda: 1e-3 # 初始lambda值
+        lambda_factor: 10 # lambda调整因子
+    criteria:
+        trans_eps: 1e-3 # 平移收敛阈值
+        rot_eps: 1e-3 # 旋转收敛阈值
+    factor:
+        type: "gicp" # 点云配准因子类型
+        max_search_sq_dist: 1.0 # 最大搜索平方距离
+
 eskf:
     buffer_len: 0.3 # 延迟更新的IMU缓冲区长度（s）
     max_iterations: 10 # 最大迭代次数
@@ -87,3 +100,5 @@ initializer:
 estimator:
     cov_estimation_neighbors: 5 # 点云协方差估计的最近邻数
     min_icp_points: 100 # 进行ICP的最小点数
+    lidar_fusion_ratio: 5.0 # 雷达融合比例
+    estimate_extrinsic: true # 是否估计外参
