@@ -42,12 +42,14 @@ Result Optimizer::optimize(const NearestNeighborSearcher &target_nn_searcher,
             const VecXd delta = (H + lambda * MatXd::Identity(dim, dim)).ldlt().solve(-b);
 
             // 验证求解结果
-            const SE3f new_T_tb = result.T_tb * SE3f::exp(delta.head<6>().cast<Float>());
+            const SE3f new_T_tb =
+                    result.T_tb * SE3f(SO3f::exp(delta.segment<3>(3).cast<Float>()), delta.head<3>().cast<Float>());
             std::vector<SE3f> new_T_bs;
             double new_e = 0.0;
             for (size_t k = 0; k < source_point_clouds.size(); ++k) {
                 const long o_ext = 6 + static_cast<long>(k) * 6;
-                new_T_bs.push_back(result.T_bs[k] * SE3f::exp(delta.segment<6>(o_ext).cast<Float>()));
+                new_T_bs.push_back(result.T_bs[k] * SE3f(SO3f::exp(delta.segment<3>(o_ext + 3).cast<Float>()),
+                                                         delta.segment<3>(o_ext).cast<Float>()));
                 new_e += Reducer::error(target_nn_searcher, *source_point_clouds[k], new_T_tb, new_T_bs[k], factors[k]);
             }
 

@@ -43,7 +43,7 @@ void FlatContainer::add(const Setting &setting, const PointCloud &point_cloud, s
     points_.push_back(std::move(trans_point));
     normals_.emplace_back(T.so3().cast<float>() * point_cloud[i].getNormalVector3fMap());
     covariances_.emplace_back(T.so3().matrix().cast<float>() * point_cloud[i].getCovariance3fMap() *
-                              T.so3().inverse().matrix().cast<float>());
+                              T.so3().matrix().transpose().cast<float>());
 }
 
 } // namespace lvins
