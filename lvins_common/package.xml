@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="3">
+    <!-- 包信息 -->
+    <name>lvins_common</name>
+    <version>0.1.0</version>
+    <description>
+        Common module of LVINS project implemented with ROS2.
+    </description>
+    <url type="bug tracker">https://github.com/LauZanMo/LVINS/issues</url>
+    <url type="repository">https://github.com/LauZanMo/LVINS</url>
+
+    <!-- 工程作者 -->
+    <author email="LauZanMo@whu.edu.cn">LauZanMo</author>
+    <maintainer email="LauZanMo@whu.edu.cn">LauZanMo</maintainer>
+
+    <!-- 许可证 -->
+    <license>GPLv3</license>
+
+    <!-- ROS2依赖 -->
+    <buildtool_depend>ament_cmake</buildtool_depend>
+    <depend>lvins_config</depend>
+
+    <!-- 系统依赖 -->
+    <depend>eigen</depend>
+    <depend>spdlog</depend>
+    <depend>yaml-cpp</depend>
+
+    <!-- 导出可执行文件 -->
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
+</package>
