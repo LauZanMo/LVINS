@@ -1,0 +1,1 @@
+include("${lvins_config_DIR}/lvins_setup.cmake")
