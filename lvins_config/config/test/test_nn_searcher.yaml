@@ -1,0 +1,23 @@
+nn_searcher:
+    type: "ivox"
+    leaf_size: 0.5 # 体素尺寸（m）
+    lru_horizon: 100 # LRU删除阈值
+    lru_clear_cycle: 10 # LRU清除周期
+    search_offsets: 1 # 搜索偏移量
+    voxel_content:
+        type: "flat" # 体素内容类型
+        min_sq_dist_in_cell: 0.0001 # 容器中最小的点间距离平方
+        max_num_points_in_cell: 25 # 容器中最大点数
+
+point_cloud_aligner:
+    optimizer:
+        max_iterations: 10 # 最大迭代次数
+        max_inner_iterations: 10 # 最大内部迭代次数（lambda迭代）
+        init_lambda: 1e-3 # 初始lambda值
+        lambda_factor: 10 # lambda调整因子
+    criteria:
+        trans_eps: 1e-3 # 平移收敛阈值
+        rot_eps: 1e-3 # 旋转收敛阈值
+    factor:
+        type: "gicp" # 点云配准因子类型
+        max_search_sq_dist: 1.0 # 最大搜索平方距离
