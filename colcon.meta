@@ -1,0 +1,63 @@
+{
+    "names": {
+        "sophus": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DSOPHUS_USE_BASIC_LOGGING=ON",
+                "-DBUILD_SOPHUS_TESTS=OFF",
+                "-DBUILD_SOPHUS_EXAMPLES=OFF"
+            ]
+        },
+        "gtsam": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF",
+                "-DGTSAM_BUILD_TESTS=OFF",
+                "-DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF",
+                "-DGTSAM_USE_SYSTEM_EIGEN=ON",
+                "-DGTSAM_USE_SYSTEM_METIS=ON"
+            ]
+        },
+        "gtsam_points": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DBUILD_WITH_OPENMP=ON",
+                "-DBUILD_WITH_TBB=ON"
+            ],
+            "dependencies": [
+                "gtsam"
+            ]
+        },
+        "lvins_config": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=Release"
+            ]
+        },
+        "lvins_common": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=Release"
+            ],
+            "dependencies": [
+                "sophus"
+            ]
+        },
+        "lvins_camera": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=Release"
+            ]
+        },
+        "lvins_lidar": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=Release"
+            ]
+        },
+        "lvins_icp": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=Release"
+            ],
+            "dependencies": [
+                "gtsam_points"
+            ]
+        }
+    }
+}
