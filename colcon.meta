@@ -58,6 +58,16 @@
             "dependencies": [
                 "gtsam_points"
             ]
+        },
+        "lvins_odometry": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+            ]
+        },
+        "lvins_ros": {
+            "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+            ]
         }
     }
 }
