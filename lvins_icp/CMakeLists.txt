@@ -18,6 +18,7 @@ add_library(${PROJECT_NAME} SHARED
     src/preprocess/box_filter.cpp
     src/preprocess/voxel_grid_sample.cpp
     src/preprocess/covariance_estimation.cpp
+    src/preprocess/copy.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

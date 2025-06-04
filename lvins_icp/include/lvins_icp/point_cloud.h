@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lvins_common/eigen_types.h"
 #include "lvins_common/string_helper.h"
 
 #include <gtsam_points/types/point_cloud_cpu.hpp>
@@ -9,6 +10,14 @@ namespace lvins {
 using Point         = Eigen::Matrix<double, 4, 1>;
 using PointCloud    = gtsam_points::PointCloudCPU;
 using RawPointCloud = PointCloud;
+
+/**
+ * @brief 点云变换
+ * @param point_cloud 输入点云
+ * @param T 变换矩阵
+ * @return 变换后的点云
+ */
+PointCloud::Ptr transform(const PointCloud &point_cloud, const SE3f &T);
 
 } // namespace lvins
 
