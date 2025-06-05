@@ -22,7 +22,7 @@
             "cmake-args": [
                 "-DCMAKE_BUILD_TYPE=Release",
                 "-DBUILD_WITH_OPENMP=ON",
-                "-DBUILD_WITH_TBB=ON"
+                "-DBUILD_WITH_TBB=OFF"
             ],
             "dependencies": [
                 "gtsam"
@@ -38,7 +38,8 @@
                 "-DCMAKE_BUILD_TYPE=Release"
             ],
             "dependencies": [
-                "sophus"
+                "sophus",
+                "gtsam"
             ]
         },
         "lvins_camera": {

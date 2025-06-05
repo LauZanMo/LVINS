@@ -5,6 +5,7 @@ project(lvins_common)
 find_package(spdlog 1.5.0 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(Sophus REQUIRED)
+find_package(GTSAM 4.2.0 EXACT)
 
 # 查找ROS包
 find_package(ament_cmake REQUIRED)
@@ -21,6 +22,7 @@ add_library(${PROJECT_NAME} SHARED
     src/noise_parameters.cpp
     src/path_helper.cpp
     src/rotation_helper.cpp
+    src/gtsam_helper.cpp
     src/time/timer.cpp
     src/time/time_task.cpp
     src/time/time_wheel.cpp
@@ -36,6 +38,7 @@ target_link_libraries(${PROJECT_NAME}
     spdlog::spdlog
     ${YAML_CPP_LIBRARIES}
     Sophus::Sophus
+    gtsam
 )
 ament_target_dependencies(${PROJECT_NAME}
     lvins_config
@@ -59,6 +62,7 @@ ament_export_dependencies(
     spdlog
     yaml-cpp
     Sophus
+    GTSAM
     lvins_config
 )
 ament_package()
