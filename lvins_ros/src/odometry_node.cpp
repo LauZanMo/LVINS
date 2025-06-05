@@ -159,7 +159,7 @@ void OdometryNode::pointCloudCallback(size_t idx, const sensor_msgs::msg::PointC
                 LVINS_INFO("Lidar #{} type detected: {}", i, lidar_types_[i]);
             }
 
-            auto raw_point_cloud = point_cloud_converter::convert(point_cloud_msgs[i], lidar_types_[i]);
+            auto raw_point_cloud = point_cloud_converter::convert(*point_cloud_msgs[i], lidar_types_[i]);
             LVINS_INFO("Point cloud: {}", *raw_point_cloud);
             raw_point_clouds.push_back(std::move(raw_point_cloud));
         }

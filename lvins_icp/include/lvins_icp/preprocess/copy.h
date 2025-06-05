@@ -5,11 +5,10 @@
 namespace lvins {
 
 /**
- * @brief 拷贝点云（丢弃时间信息）
- * @param src 原始点云
- * @param output 输出点云
- * @warning 输出点云在输入时需要为空
+ * @brief 拷贝点云
+ * @param point_cloud 输入点云
+ * @return 输出点云
  */
-void copy(const RawPointCloud &src, PointCloud &output);
+PointCloud::Ptr copy(const RawPointCloud &point_cloud);
 
 } // namespace lvins

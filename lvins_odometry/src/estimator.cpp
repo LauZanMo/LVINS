@@ -130,9 +130,9 @@ void Estimator::addPointClouds(int64_t timestamp, const std::vector<RawPointClou
         auto raw_point_cloud = preprocessor_->process(raw_point_clouds[i]);
         lidar_frames[i] = std::make_shared<LidarFrame>(timestamp, lidar_rig_->lidar(i), std::move(raw_point_cloud));
         // TODO: 根据IMU数据进行点云矫正
-        copy(lidar_frames[i]->rawPointCloud(), lidar_frames[i]->pointCloud());
-        estimateCovariance(lidar_frames[i]->pointCloud(), cov_estimation_neighbors_);
-        icp_points += lidar_frames[i]->pointCloud().size();
+        lidar_frames[i]->pointCloud() = copy(*lidar_frames[i]->rawPointCloud());
+        estimateCovariance(*lidar_frames[i]->pointCloud(), cov_estimation_neighbors_);
+        icp_points += lidar_frames[i]->pointCloud()->size();
     }
     LVINS_STOP_TIMER(lidar_preprocess_timer_);
     LVINS_PRINT_TIMER_MS("Lidar preprocess", lidar_preprocess_timer_);

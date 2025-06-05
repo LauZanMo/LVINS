@@ -51,8 +51,8 @@ struct LVINS_FORMATTER<lvins::PointCloud> {
         }
 
         return LVINS_FORMAT_TO(ctx.out(), "timestamp range: [{} - {}], points size: {}",
-                               LVINS_GROUP_DIGITS(static_cast<int64_t>(point_cloud.times_storage.front())),
-                               LVINS_GROUP_DIGITS(static_cast<int64_t>(point_cloud.times_storage.back())),
+                               LVINS_GROUP_DIGITS(static_cast<int64_t>(point_cloud.times[0])),
+                               LVINS_GROUP_DIGITS(static_cast<int64_t>(point_cloud.times[point_cloud.size() - 1])),
                                point_cloud.num_points);
     }
 };

@@ -83,20 +83,20 @@ public:
      * @param idx 指定索引
      * @return 指定索引下的帧
      */
-    [[nodiscard]] LidarFrame &frame(size_t idx);
+    [[nodiscard]] LidarFrame::Ptr &frame(size_t idx);
 
     /**
      * @brief 获取指定索引下的帧
      * @param idx 指定索引
      * @return 指定索引下的帧
      */
-    [[nodiscard]] const LidarFrame &frame(size_t idx) const;
+    [[nodiscard]] LidarFrame::ConstPtr frame(size_t idx) const;
 
     /**
      * @brief 获取帧束中的点云指针集合
      * @return 帧束中的点云指针集合
      */
-    [[nodiscard]] std::vector<const PointCloud *> pointClouds() const;
+    [[nodiscard]] std::vector<PointCloud::ConstPtr> pointClouds() const;
 
     /**
      * @brief 打印帧束信息

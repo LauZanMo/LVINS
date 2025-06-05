@@ -90,7 +90,7 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
     // 发布TF
     geometry_msgs::msg::TransformStamped trans_msg;
     for (size_t i = 0; i < bundle->size(); ++i) {
-        const auto &T_bs                  = bundle->frame(i).Tbs();
+        const auto &T_bs                  = bundle->frame(i)->Tbs();
         trans_msg.header.frame_id         = imu_frame_id_;
         trans_msg.child_frame_id          = lidar_frame_ids_[i];
         trans_msg.transform.translation.x = T_bs.translation()[0];
@@ -108,16 +108,16 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
         // 原始点云
         if (frame_point_cloud_pubs_[i]->get_subscription_count() != 0) {
             const auto &frame      = bundle->frame(i);
-            const auto point_cloud = transform(frame.rawPointCloud(), frame.Twf());
-            const auto msg         = point_cloud_converter::convert(bundle->timestamp(), map_frame_id_, point_cloud);
+            const auto point_cloud = transform(*frame->rawPointCloud(), frame->Twf());
+            const auto msg         = point_cloud_converter::convert(bundle->timestamp(), map_frame_id_, *point_cloud);
             frame_point_cloud_pubs_[i]->publish(*msg);
         }
 
         // 压缩点云
         if (frame_compress_point_cloud_pubs_[i]->get_subscription_count() != 0) {
             const auto &frame      = bundle->frame(i);
-            const auto point_cloud = transform(frame.pointCloud(), frame.Twf());
-            const auto msg         = point_cloud_converter::convert(bundle->timestamp(), map_frame_id_, point_cloud);
+            const auto point_cloud = transform(*frame->pointCloud(), frame->Twf());
+            const auto msg         = point_cloud_converter::convert(bundle->timestamp(), map_frame_id_, *point_cloud);
             frame_compress_point_cloud_pubs_[i]->publish(*msg);
         }
     }

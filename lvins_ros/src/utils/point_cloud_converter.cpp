@@ -167,10 +167,6 @@ PointCloud::Ptr convert(const sensor_msgs::msg::PointCloud2 &msg, const std::str
     return point_cloud;
 }
 
-PointCloud::Ptr convert(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, const std::string &lidar_type) {
-    return convert(*msg, lidar_type);
-}
-
 sensor_msgs::msg::PointCloud2::SharedPtr convert(int64_t timestamp, const std::string &frame_id,
                                                  const PointCloud &point_cloud) {
     const auto msg       = std::make_shared<sensor_msgs::msg::PointCloud2>();
@@ -208,11 +204,6 @@ sensor_msgs::msg::PointCloud2::SharedPtr convert(int64_t timestamp, const std::s
     }
 
     return msg;
-}
-
-sensor_msgs::msg::PointCloud2::SharedPtr convert(int64_t timestamp, const std::string &frame_id,
-                                                 const PointCloud::ConstPtr &point_cloud) {
-    return convert(timestamp, frame_id, *point_cloud);
 }
 
 } // namespace lvins::point_cloud_converter

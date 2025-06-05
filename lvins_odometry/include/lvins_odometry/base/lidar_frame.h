@@ -12,7 +12,8 @@ namespace lvins {
  */
 class LidarFrame : public NonCopyable {
 public:
-    using Ptr = std::shared_ptr<LidarFrame>;
+    using Ptr      = std::shared_ptr<LidarFrame>;
+    using ConstPtr = std::shared_ptr<const LidarFrame>;
 
     /**
      * @brief 构造函数
@@ -88,25 +89,25 @@ public:
      * @brief 获取帧原始点云
      * @return 帧原始点云
      */
-    [[nodiscard]] RawPointCloud &rawPointCloud();
+    [[nodiscard]] RawPointCloud::Ptr &rawPointCloud();
 
     /**
      * @brief 获取帧原始点云
      * @return 帧原始点云
      */
-    [[nodiscard]] const RawPointCloud &rawPointCloud() const;
+    [[nodiscard]] RawPointCloud::ConstPtr rawPointCloud() const;
 
     /**
      * @brief 获取帧点云
      * @return 帧点云
      */
-    [[nodiscard]] PointCloud &pointCloud();
+    [[nodiscard]] PointCloud::Ptr &pointCloud();
 
     /**
      * @brief 获取帧点云
      * @return 帧点云
      */
-    [[nodiscard]] const PointCloud &pointCloud() const;
+    [[nodiscard]] PointCloud::ConstPtr pointCloud() const;
 
     /**
      * @brief 打印帧信息

@@ -67,20 +67,20 @@ size_t LidarFrameBundle::size() const {
     return frames_.size();
 }
 
-LidarFrame &LidarFrameBundle::frame(size_t idx) {
+LidarFrame::Ptr &LidarFrameBundle::frame(size_t idx) {
     LVINS_CHECK(idx < frames_.size(), "Index should be less than the number of frames!");
-    return *frames_[idx];
+    return frames_[idx];
 }
 
-const LidarFrame &LidarFrameBundle::frame(size_t idx) const {
+LidarFrame::ConstPtr LidarFrameBundle::frame(size_t idx) const {
     LVINS_CHECK(idx < frames_.size(), "Index should be less than the number of frames!");
-    return *frames_[idx];
+    return frames_[idx];
 }
 
-std::vector<const PointCloud *> LidarFrameBundle::pointClouds() const {
-    std::vector<const PointCloud *> point_clouds;
+std::vector<PointCloud::ConstPtr> LidarFrameBundle::pointClouds() const {
+    std::vector<PointCloud::ConstPtr> point_clouds;
     for (const auto &frame: frames_) {
-        point_clouds.push_back(&frame->pointCloud());
+        point_clouds.push_back(frame->pointCloud());
     }
     return point_clouds;
 }
