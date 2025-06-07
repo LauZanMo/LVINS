@@ -26,7 +26,7 @@ PointCloudAligner::PointCloudAligner(const YAML::Node &config) {
     params_->setAbsoluteErrorTol(absolute_error_eps);
     params_->setRelativeErrorTol(relative_error_eps);
     if (verbosity) {
-        params_->callback = [](const auto &status, const auto & /*values*/) {
+        params_->callback = [](auto &&status, auto && /*values*/) {
             LVINS_INFO("Printing optimization status:\n{}", status.to_string());
         };
     }

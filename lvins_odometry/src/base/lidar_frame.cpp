@@ -45,22 +45,18 @@ void LidarFrame::setTbs(const SE3f &T_bs) {
 }
 
 RawPointCloud::Ptr &LidarFrame::rawPointCloud() {
-    LVINS_CHECK(raw_point_cloud_, "Raw point cloud should be initialized before access!");
     return raw_point_cloud_;
 }
 
 RawPointCloud::ConstPtr LidarFrame::rawPointCloud() const {
-    LVINS_CHECK(raw_point_cloud_, "Raw point cloud should be initialized before access!");
     return raw_point_cloud_;
 }
 
 PointCloud::Ptr &LidarFrame::pointCloud() {
-    LVINS_CHECK(point_cloud_, "Point cloud should be initialized before access!");
     return point_cloud_;
 }
 
 PointCloud::ConstPtr LidarFrame::pointCloud() const {
-    LVINS_CHECK(point_cloud_, "Point cloud should be initialized before access!");
     return point_cloud_;
 }
 

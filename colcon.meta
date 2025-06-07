@@ -54,7 +54,7 @@
         },
         "lvins_icp": {
             "cmake-args": [
-                "-DCMAKE_BUILD_TYPE=Release"
+                "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
             ],
             "dependencies": [
                 "gtsam_points"

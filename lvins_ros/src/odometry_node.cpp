@@ -115,7 +115,7 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
         using ResetCallback = std::function<void(const std_srvs::srv::Trigger::Request::ConstSharedPtr &,
                                                  const std_srvs::srv::Trigger::Response::SharedPtr &)>;
         ResetCallback cb    = [this]([[maybe_unused]] auto &&request, auto &&response) {
-            // estimator_->reset();
+            estimator_->reset();
             response->success = true;
             response->message = "Odometry node reset!";
         };
@@ -160,7 +160,7 @@ void OdometryNode::pointCloudCallback(size_t idx, const sensor_msgs::msg::PointC
             }
 
             auto raw_point_cloud = point_cloud_converter::convert(*point_cloud_msgs[i], lidar_types_[i]);
-            LVINS_INFO("Point cloud: {}", *raw_point_cloud);
+            LVINS_INFO("Raw point cloud: {}", *raw_point_cloud);
             raw_point_clouds.push_back(std::move(raw_point_cloud));
         }
 

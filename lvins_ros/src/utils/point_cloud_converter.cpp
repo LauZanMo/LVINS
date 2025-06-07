@@ -118,9 +118,9 @@ PointCloud::Ptr convert(const sensor_msgs::msg::PointCloud2 &msg, const std::str
                 timestamps[i] = static_cast<double>(rclcpp::Time(msg.header.stamp).nanoseconds()) +
                                 *reinterpret_cast<const uint32_t *>(timestamp_ptr);
             } else if (lidar_type == "velodyne") {
-                // Velodyne：相对于扫描开始时间的差值（ns）
+                // Velodyne：相对于扫描开始时间的差值（us）
                 timestamps[i] = static_cast<double>(rclcpp::Time(msg.header.stamp).nanoseconds()) +
-                                *reinterpret_cast<const float *>(timestamp_ptr);
+                                *reinterpret_cast<const float *>(timestamp_ptr) * 1e3;
             } else if (lidar_type == "livox") {
                 // Livox：绝对时间戳（ns）
                 timestamps[i] = *reinterpret_cast<const double *>(timestamp_ptr);

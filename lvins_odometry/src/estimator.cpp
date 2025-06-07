@@ -48,6 +48,14 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
     preprocessor_ = std::make_unique<Preprocessor>(config["preprocessor"]);
     LVINS_INFO("Printing preprocessor parameters:\n{}", *preprocessor_);
 
+    // // 初始化点云配准器
+    point_cloud_aligner_ = std::make_shared<PointCloudAligner>(config["point_cloud_aligner"]);
+    LVINS_INFO("Printing point cloud aligner parameters:\n{}", *point_cloud_aligner_);
+
+    // 初始化局部建图器
+    local_mapper_ = std::make_shared<NearestNeighborSearch>(config["local_mapper"]);
+    LVINS_INFO("Printing local mapper parameters:\n{}", *local_mapper_);
+
     // 加载初始化器
     initializer_ = InitializerBase::loadFromYaml(config["initializer"], g_w);
     LVINS_INFO("Printing initializer parameters:\n{}", *initializer_);
@@ -64,6 +72,12 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
     cov_estimation_neighbors_   = YAML::get<size_t>(estimator_config, "cov_estimation_neighbors");
     min_icp_points_             = YAML::get<size_t>(estimator_config, "min_icp_points");
     estimate_extrinsic_         = YAML::get<bool>(estimator_config, "estimate_extrinsic");
+
+    // 启动估计线程
+    running_         = true;
+    estimate_thread_ = std::make_unique<std::thread>(&Estimator::estimateLoop, this);
+
+    LVINS_INFO("Estimator started!");
 }
 
 Estimator::~Estimator() {
@@ -75,21 +89,20 @@ Estimator::~Estimator() {
     if (camera_rig_)
         LVINS_INFO("Printing optimized camera rig parameters:\n{}", *camera_rig_);
 
+    // 结束估计线程
+    running_ = false;
+    lidar_frame_bundle_buffer_.push(nullptr);
+    imu_buffer_.push(Imu());
+    estimate_thread_->join();
+
     LVINS_INFO("Estimator closed!");
 }
 
 void Estimator::reset() {
     LVINS_INFO("Resetting estimator...");
 
-    // 重置系统
-    status_ = EstimatorStatus::INITIALIZING;
-    drawer_->reset();
-
-    // 清空缓冲区
-    lidar_frame_bundle_buffer_.clear();
-
-    ++reset_count_;
-    LVINS_INFO("Estimator reset!");
+    // 使能标志位
+    reset_ = true;
 }
 
 void Estimator::addImu(const Imu &imu) {
@@ -99,23 +112,62 @@ void Estimator::addImu(const Imu &imu) {
         input.acc *= gravity_mag_;
     }
 
-    if (status_ == EstimatorStatus::INITIALIZING) {
+    // 将IMU加入缓冲区
+    imu_buffer_.push(std::move(input));
+
+    /*if (status_ == EstimatorStatus::INITIALIZING) {
         // 初始化器添加IMU数据
         initializer_->addImu(input);
 
         // 初始化器添加雷达帧束
         LidarFrameBundle::Ptr lidar_frame_bundle;
-        while (lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
+        while (lidar_lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
+            lidar_frame_bundle->setTbs(lidar_rig_->Tbs());
             initializer_->addLidarFrameBundle(lidar_frame_bundle);
         }
 
         // 尝试初始化
         if (initializer_->tryInitialize()) {
+            // 初始化ESKF
+            // eskf_->initialize(initializer_->navStates(), initializer_->imus());
+
+            // 初始化局部地图并绘制
+            for (const auto &bundle: initializer_->lidarFrameBundles()) {
+                for (size_t i = 0; i < bundle->size(); ++i) {
+                    const auto &frame = bundle->frame(i);
+                    local_mapper_->insert(*frame->pointCloud(), frame->Twf());
+                }
+                drawer_->updateLidarFrameBundle(bundle->timestamp(), bundle);
+            }
+
+            // 绘制初始导航状态
+            // drawer_->updateNavState(eskf_->predictState().timestamp, eskf_->predictState());
+
             // 更新状态标志位
             status_ = EstimatorStatus::ESTIMATING;
         }
     } else if (status_ == EstimatorStatus::ESTIMATING) {
-    }
+        static NavState state(initializer_->navStates().back());
+        LidarFrameBundle::Ptr lidar_frame_bundle;
+        while (lidar_lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
+            state.timestamp = lidar_frame_bundle->timestamp();
+            lidar_frame_bundle->setTbs(lidar_rig_->Tbs());
+            const auto result = point_cloud_aligner_->align(local_mapper_->getSearch(),
+                                                            lidar_frame_bundle->pointClouds(), *noise_params_, state.T,
+                                                            lidar_frame_bundle->Tbs(), estimate_extrinsic_);
+
+            state.T = result.T_tb;
+            lidar_frame_bundle->setState(state);
+
+            for (size_t i = 0; i < lidar_frame_bundle->size(); ++i) {
+                const auto &frame = lidar_frame_bundle->frame(i);
+                local_mapper_->insert(*frame->pointCloud(), frame->Twf());
+            }
+
+            drawer_->updateLidarFrameBundle(lidar_frame_bundle->timestamp(), lidar_frame_bundle);
+            drawer_->updateNavState(state.timestamp, state);
+        }
+    }*/
 }
 
 void Estimator::addPointClouds(int64_t timestamp, const std::vector<RawPointCloud::Ptr> &raw_point_clouds) {
@@ -129,17 +181,15 @@ void Estimator::addPointClouds(int64_t timestamp, const std::vector<RawPointClou
     for (size_t i = 0; i < raw_point_clouds.size(); ++i) {
         auto raw_point_cloud = preprocessor_->process(raw_point_clouds[i]);
         lidar_frames[i] = std::make_shared<LidarFrame>(timestamp, lidar_rig_->lidar(i), std::move(raw_point_cloud));
-        // TODO: 根据IMU数据进行点云矫正
-        lidar_frames[i]->pointCloud() = copy(*lidar_frames[i]->rawPointCloud());
-        estimateCovariance(*lidar_frames[i]->pointCloud(), cov_estimation_neighbors_);
-        icp_points += lidar_frames[i]->pointCloud()->size();
+        estimateCovariance(*lidar_frames[i]->rawPointCloud(), cov_estimation_neighbors_);
+        icp_points += lidar_frames[i]->rawPointCloud()->size();
     }
     LVINS_STOP_TIMER(lidar_preprocess_timer_);
     LVINS_PRINT_TIMER_MS("Lidar preprocess", lidar_preprocess_timer_);
 
     // 若点云点数太少，则跳过
     if (icp_points < min_icp_points_) {
-        LVINS_WARN("Not enough points for registration! Skipping this lidar frame bundle at {}.",
+        LVINS_WARN("Not enough points for registration! Skipping lidar frame bundle at {}.",
                    LVINS_GROUP_DIGITS(timestamp));
         return;
     }
@@ -150,6 +200,126 @@ void Estimator::addPointClouds(int64_t timestamp, const std::vector<RawPointClou
 
 void Estimator::addImages(int64_t /*timestamp*/, const std::vector<cv::Mat> & /*raw_images*/) {
     LVINS_WARN("Image processing is not implemented!");
+}
+
+void Estimator::estimateLoop() {
+    // 同步缓冲区
+    if (!syncBuffer())
+        return;
+
+    // 估计循环
+    while (true) {
+        // 从缓冲区中获取测量值
+        LVINS_START_TIMER(pop_timer_);
+        if (!getMeasurementFromBuffer()) {
+            return;
+        }
+        LVINS_STOP_TIMER(pop_timer_);
+        LVINS_PRINT_TIMER_MS("Get measurement", pop_timer_);
+
+        LVINS_INFO("Lidar frame bundle timestamp range: [{} - {}]",
+                   LVINS_GROUP_DIGITS(last_lidar_frame_bundle_->timestamp()),
+                   LVINS_GROUP_DIGITS(cur_lidar_frame_bundle_->timestamp()));
+        LVINS_INFO("IMUs timestamp range: [{} - {}]", LVINS_GROUP_DIGITS(cur_imus_.front().timestamp),
+                   LVINS_GROUP_DIGITS(cur_imus_.back().timestamp));
+
+
+
+        // 检查是否需要重置，重置后需要同步缓冲区
+        if (reset_) {
+            internalReset();
+            if (!syncBuffer())
+                return;
+        }
+    }
+}
+
+void Estimator::internalReset() {
+    // 重置系统
+    status_ = EstimatorStatus::INITIALIZING;
+    drawer_->reset();
+    local_mapper_->reset();
+    initializer_->reset();
+
+    // 清空缓冲区
+    lidar_frame_bundle_buffer_.clear();
+    imu_buffer_.clear();
+    cur_lidar_frame_bundle_.reset();
+    last_lidar_frame_bundle_.reset();
+    preintegrate_imus_.clear();
+    last_imu_ = Imu();
+
+    // 重置标志位
+    reset_ = false;
+    ++reset_count_;
+
+    LVINS_INFO("Estimator reset!");
+}
+
+bool Estimator::syncBuffer() {
+    // 从缓冲区中获取一个历元的测量值，用于比较
+    last_lidar_frame_bundle_ = lidar_frame_bundle_buffer_.pop();
+    last_imu_                = imu_buffer_.pop();
+
+    if (!running_) {
+        return false;
+    }
+
+    // 对IMU和帧束进行对齐
+    while (last_imu_.timestamp >= last_lidar_frame_bundle_->timestamp()) {
+        last_lidar_frame_bundle_ = lidar_frame_bundle_buffer_.pop();
+
+        if (!running_) {
+            return false;
+        }
+    }
+    Imus imus;
+    cur_lidar_frame_bundle_ = last_lidar_frame_bundle_;
+    return getImusFromBuffer(cur_lidar_frame_bundle_->timestamp(), imus);
+}
+
+bool Estimator::getMeasurementFromBuffer() {
+    LVINS_CHECK(cur_lidar_frame_bundle_, "Current frame bundle should be initialized!");
+
+    // 保存上一帧束，并从帧束缓冲区中取出新帧束
+    last_lidar_frame_bundle_ = cur_lidar_frame_bundle_;
+    cur_lidar_frame_bundle_  = lidar_frame_bundle_buffer_.pop();
+
+    if (!running_) {
+        return false;
+    }
+
+    // 设置当前帧束外参
+    cur_lidar_frame_bundle_->setTbs(lidar_rig_->Tbs());
+
+    // 从缓冲区中获取当前帧束之前的IMU
+    return getImusFromBuffer(cur_lidar_frame_bundle_->timestamp(), cur_imus_);
+}
+
+bool Estimator::getImusFromBuffer(int64_t timestamp, Imus &imus) {
+    LVINS_CHECK(last_imu_, "Last IMU should be initialized!");
+
+    // 将上一个IMU加入容器
+    imus.clear();
+    imus.push_back(last_imu_);
+
+    // 从IMU缓冲区中取出timestamp之前的IMU
+    while (true) {
+        auto imu = imu_buffer_.pop();
+
+        if (!running_) {
+            return false;
+        }
+
+        // 根据时间戳对IMU做对应处理
+        if (imu.timestamp < timestamp) {
+            imus.push_back(std::move(imu));
+        } else {
+            last_imu_ = Imu::interpolate(imus.back(), imu, timestamp);
+            imus.push_back(last_imu_);
+            return true;
+        }
+    }
 }
 
 } // namespace lvins
