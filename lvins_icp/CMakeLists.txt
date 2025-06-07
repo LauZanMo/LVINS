@@ -20,6 +20,7 @@ add_library(${PROJECT_NAME} SHARED
     src/preprocess/covariance_estimation.cpp
     src/preprocess/copy.cpp
     src/align/point_cloud_aligner.cpp
+    src/align/nearest_neighbor_search.cpp
     src/align/result.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC

@@ -26,13 +26,25 @@ PointCloudAligner::PointCloudAligner(const YAML::Node &config) {
     params_->setAbsoluteErrorTol(absolute_error_eps);
     params_->setRelativeErrorTol(relative_error_eps);
     if (verbosity) {
-        params_->set_verbose();
+        params_->callback = [](const auto &status, const auto & /*values*/) {
+            LVINS_INFO("Printing optimization status:\n{}", status.to_string());
+        };
     }
 }
 
-YAML::Node PointCloudAligner::writeToYaml() const {}
+YAML::Node PointCloudAligner::writeToYaml() const {
+    YAML::Node node;
+    node["max_iterations"]     = params_->maxIterations;
+    node["absolute_error_eps"] = params_->absoluteErrorTol;
+    node["relative_error_eps"] = params_->relativeErrorTol;
+    node["verbosity"]          = params_->callback ? true : false;
+    node["trans_eps"]          = trans_eps_;
+    node["rot_eps"]            = rot_eps_;
+    node["num_threads"]        = num_threads_;
+    return node;
+}
 
-PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::ConstPtr &target_nn_searcher,
+PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::Search::ConstPtr &target_nn_search,
                                                    const std::vector<PointCloud::ConstPtr> &source_point_clouds,
                                                    const NoiseParameters &noise_params, const SE3f &init_T_tb,
                                                    const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic) const {
@@ -58,8 +70,9 @@ PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::
             last_T_ts.push_back(toPose3(init_T_ts));
             values.insert(L(i), toPose3(init_T_ts));
 
-            const auto icp_factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<NearestNeighborSearch>>(
-                    W(0), L(i), target_nn_searcher, source_point_clouds[i], target_nn_searcher);
+            const auto icp_factor =
+                    gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<NearestNeighborSearch::Search>>(
+                            W(0), L(i), target_nn_search, source_point_clouds[i], target_nn_search);
             icp_factor->set_num_threads(num_threads_);
             graph.add(icp_factor);
         }
@@ -81,8 +94,11 @@ PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::
         // 点云配准因子
         for (size_t i = 0; i < source_point_clouds.size(); ++i) {
             const auto transform_point_cloud = transform(*source_point_clouds[i], init_T_bs[i]);
-            const auto icp_factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<NearestNeighborSearch>>(
-                    W(0), B(0), target_nn_searcher, transform_point_cloud, target_nn_searcher);
+            const auto icp_factor =
+                    gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<NearestNeighborSearch::Search>>(
+                            W(0), B(0), target_nn_search, transform_point_cloud, target_nn_search);
+            icp_factor->set_num_threads(num_threads_);
+            graph.add(icp_factor);
         }
     }
 
@@ -121,6 +137,8 @@ PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::
 
         return converged;
     };
+    graph.print("Point Cloud Alignment Graph:");
+    values.print("Initial Values:");
     gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, *params_);
     values = optimizer.optimize();
 
@@ -139,12 +157,61 @@ PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::
     return result;
 }
 
-void PointCloudAligner::addFactor(const NearestNeighborSearch::ConstPtr &target_nn_searcher,
+void PointCloudAligner::addFactor(const NearestNeighborSearch::Search::ConstPtr &target_nn_search,
                                   const std::vector<PointCloud::ConstPtr> &source_point_clouds,
                                   const NoiseParameters &noise_params, const SE3f &init_T_tb,
                                   const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic,
-                                  gtsam::NonlinearFactorGraph &graph, gtsam::Values &values) const {}
+                                  gtsam::NonlinearFactorGraph &graph, gtsam::Values &values) const {
+    if (estimate_extrinsic) {
+        // 点云配准因子
+        for (size_t i = 0; i < source_point_clouds.size(); ++i) {
+            SE3f init_T_ts = init_T_tb * init_T_bs[i];
+            values.insert(L(i), toPose3(init_T_ts));
 
-std::string PointCloudAligner::print() const {}
+            const auto icp_factor =
+                    gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<NearestNeighborSearch::Search>>(
+                            W(0), L(i), target_nn_search, source_point_clouds[i], target_nn_search);
+            icp_factor->set_num_threads(num_threads_);
+            graph.add(icp_factor);
+        }
+
+        // 外参因子
+        const auto &ext_rot_std   = noise_params.extrinsic_rot_std;
+        const auto &ext_trans_std = noise_params.extrinsic_trans_std;
+        // clang-format off
+        const auto ext_noise_model = gtsam::noiseModel::Diagonal::Sigmas(
+                (gtsam::Vector(6) << ext_rot_std, ext_rot_std, ext_rot_std,
+                                        ext_trans_std, ext_trans_std, ext_trans_std).finished());
+        // clang-format on
+        for (size_t i = 0; i < init_T_bs.size(); ++i) {
+            const auto ext_factor = gtsam::make_shared<gtsam::BetweenFactor<gtsam::Pose3>>(
+                    B(0), L(i), toPose3(init_T_bs[i]), ext_noise_model);
+            graph.add(ext_factor);
+        }
+    } else {
+        // 点云配准因子
+        for (size_t i = 0; i < source_point_clouds.size(); ++i) {
+            const auto transform_point_cloud = transform(*source_point_clouds[i], init_T_bs[i]);
+            const auto icp_factor =
+                    gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<NearestNeighborSearch::Search>>(
+                            W(0), B(0), target_nn_search, transform_point_cloud, target_nn_search);
+            icp_factor->set_num_threads(num_threads_);
+            graph.add(icp_factor);
+        }
+    }
+}
+
+std::string PointCloudAligner::print() const {
+    return LVINS_FORMAT("Point cloud aligner:\n"
+                        "  max iterations = {}\n"
+                        "  absolute error epsilon = {}\n"
+                        "  relative error epsilon = {}\n"
+                        "  verbosity = {}\n"
+                        "  translation epsilon = {}\n"
+                        "  rotation epsilon = {}\n"
+                        "  num threads = {}",
+                        params_->maxIterations, params_->absoluteErrorTol, params_->relativeErrorTol,
+                        params_->callback ? "true" : "false", trans_eps_, rot_eps_, num_threads_);
+}
 
 } // namespace lvins

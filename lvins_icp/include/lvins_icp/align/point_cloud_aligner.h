@@ -1,7 +1,6 @@
 #pragma once
 
 #include "lvins_common/noise_parameters.h"
-#include "lvins_common/yaml/yaml_serialization.h"
 #include "lvins_icp/align/nearest_neighbor_search.h"
 #include "lvins_icp/align/result.h"
 #include "lvins_icp/point_cloud.h"
@@ -40,7 +39,7 @@ public:
 
     /**
      * @brief 配准点云
-     * @param target_nn_searcher 目标点云的最近邻搜索器
+     * @param target_nn_search 目标点云的最近邻搜索器
      * @param source_point_clouds 源点云集合
      * @param noise_params 噪声参数
      * @param init_T_tb 目标点云到载体的初始相对位姿
@@ -48,14 +47,14 @@ public:
      * @param estimate_extrinsic 是否估计雷达外参
      * @return 配准结果
      */
-    [[nodiscard]] Result align(const NearestNeighborSearch::ConstPtr &target_nn_searcher,
+    [[nodiscard]] Result align(const NearestNeighborSearch::Search::ConstPtr &target_nn_search,
                                const std::vector<PointCloud::ConstPtr> &source_point_clouds,
                                const NoiseParameters &noise_params, const SE3f &init_T_tb,
                                const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic) const;
 
     /**
      * @brief 将点云配准因子加入因子图
-     * @param target_nn_searcher 目标点云的最近邻搜索器 
+     * @param target_nn_search 目标点云的最近邻搜索器
      * @param source_point_clouds 源点云集合
      * @param noise_params 噪声参数
      * @param init_T_tb 目标点云到载体的初始相对位姿
@@ -64,7 +63,7 @@ public:
      * @param graph 因子图
      * @param values 因子图变量值集合
      */
-    void addFactor(const NearestNeighborSearch::ConstPtr &target_nn_searcher,
+    void addFactor(const NearestNeighborSearch::Search::ConstPtr &target_nn_search,
                    const std::vector<PointCloud::ConstPtr> &source_point_clouds, const NoiseParameters &noise_params,
                    const SE3f &init_T_tb, const std::vector<SE3f> &init_T_bs, bool estimate_extrinsic,
                    gtsam::NonlinearFactorGraph &graph, gtsam::Values &values) const;

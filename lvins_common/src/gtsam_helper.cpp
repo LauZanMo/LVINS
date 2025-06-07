@@ -11,7 +11,13 @@ gtsam::imuBias::ConstantBias toImuBias(const Vec3f &bg, const Vec3f &ba) {
 }
 
 SE3f toSE3(const gtsam::Pose3 &pose) {
-    return SE3f(pose.matrix().cast<Float>());
+    // 此操作是为了防止输入旋转矩阵非正交
+    Mat44f T = pose.matrix().cast<Float>();
+    Quatf q(T.block<3, 3>(0, 0));
+    q.normalize();
+    T.block<3, 3>(0, 0) = q.toRotationMatrix();
+
+    return SE3f(T);
 }
 
 } // namespace lvins
