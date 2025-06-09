@@ -235,29 +235,6 @@ void Estimator::estimateLoop() {
                 eskf_->update(task);
             }
             // const auto update_state = eskf_->state();
-
-            /*static NavState state(initializer_->navState());
-            state.timestamp = cur_lidar_frame_bundle_->timestamp();
-
-            for (size_t i = 0; i < cur_lidar_frame_bundle_->size(); ++i) {
-                cur_lidar_frame_bundle_->frame(i)->pointCloud() =
-                        copy(*cur_lidar_frame_bundle_->frame(i)->preprocessPointCloud());
-            }
-
-            const auto result = point_cloud_aligner_->align(
-                    local_mapper_->getSearch(), cur_lidar_frame_bundle_->pointClouds(), *noise_params_, state.T,
-                    cur_lidar_frame_bundle_->Tbs(), estimate_extrinsic_);
-
-            state.T = result.T_tb;
-            cur_lidar_frame_bundle_->setState(state);
-
-            for (size_t i = 0; i < cur_lidar_frame_bundle_->size(); ++i) {
-                const auto &frame = cur_lidar_frame_bundle_->frame(i);
-                local_mapper_->insert(*frame->pointCloud(), frame->Twf());
-            }
-
-            drawer_->updateLidarFrameBundle(cur_lidar_frame_bundle_->timestamp(), cur_lidar_frame_bundle_);
-            drawer_->updateNavState(state.timestamp, state);*/
         }
 
         // 检查是否需要重置，重置后需要同步缓冲区

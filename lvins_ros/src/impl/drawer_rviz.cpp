@@ -90,16 +90,16 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
     // 发布TF
     geometry_msgs::msg::TransformStamped trans_msg;
     for (size_t i = 0; i < bundle->size(); ++i) {
-        const auto &T_bs                  = bundle->frame(i)->Tbs();
-        trans_msg.header.frame_id         = imu_frame_id_;
+        const auto &T_wf                  = bundle->frame(i)->Twf();
+        trans_msg.header.frame_id         = map_frame_id_;
         trans_msg.child_frame_id          = lidar_frame_ids_[i];
-        trans_msg.transform.translation.x = T_bs.translation()[0];
-        trans_msg.transform.translation.y = T_bs.translation()[1];
-        trans_msg.transform.translation.z = T_bs.translation()[2];
-        trans_msg.transform.rotation.x    = T_bs.unit_quaternion().x();
-        trans_msg.transform.rotation.y    = T_bs.unit_quaternion().y();
-        trans_msg.transform.rotation.z    = T_bs.unit_quaternion().z();
-        trans_msg.transform.rotation.w    = T_bs.unit_quaternion().w();
+        trans_msg.transform.translation.x = T_wf.translation()[0];
+        trans_msg.transform.translation.y = T_wf.translation()[1];
+        trans_msg.transform.translation.z = T_wf.translation()[2];
+        trans_msg.transform.rotation.x    = T_wf.unit_quaternion().x();
+        trans_msg.transform.rotation.y    = T_wf.unit_quaternion().y();
+        trans_msg.transform.rotation.z    = T_wf.unit_quaternion().z();
+        trans_msg.transform.rotation.w    = T_wf.unit_quaternion().w();
         tf_broadcaster_->sendTransform(trans_msg);
     }
 
