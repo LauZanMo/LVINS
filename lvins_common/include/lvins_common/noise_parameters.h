@@ -46,8 +46,8 @@ struct NoiseParameters {
     double odom_rot_std;   ///< 里程计姿态角标准差
     double odom_trans_std; ///< 里程计位移标准差
 
-    double extrinsic_rot_std;   ///< 外参姿态角标准差
-    double extrinsic_trans_std; ///< 外参位移标准差
+    double ext_rot_std;   ///< 外参姿态角标准差
+    double ext_trans_std; ///< 外参位移标准差
 };
 
 } // namespace lvins

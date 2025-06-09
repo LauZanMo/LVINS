@@ -40,29 +40,12 @@ public:
     [[nodiscard]] YAML::Node writeToYaml() const;
 
     /**
-     * @brief 添加IMU数据
-     * @param imu IMU数据
-     */
-    virtual void addImu(const Imu &imu) = 0;
-
-    /**
-     * @brief 添加雷达帧束
-     * @param bundle 雷达帧束
-     */
-    virtual void addLidarFrameBundle(const LidarFrameBundle::Ptr &bundle) = 0;
-
-    /**
      * @brief 尝试初始化
+     * @param lidar_frame_bundle 新的雷达帧束
+     * @param imus 新的IMU数据
      * @return 是否初始化成功
      */
-    [[nodiscard]] virtual bool tryInitialize() = 0;
-
-    /**
-     * @brief 获取IMU数据容器
-     * @return IMU数据容器
-     * @warning 该方法在初始化完成后才可调用
-     */
-    [[nodiscard]] virtual const Imus &imus() const = 0;
+    [[nodiscard]] virtual bool tryInitialize(const LidarFrameBundle::Ptr &lidar_frame_bundle, const Imus &imus) = 0;
 
     /**
      * @brief 获取雷达帧束容器
@@ -72,11 +55,11 @@ public:
     [[nodiscard]] virtual const std::vector<LidarFrameBundle::Ptr> &lidarFrameBundles() const = 0;
 
     /**
-     * @brief 获取导航状态容器
-     * @return 导航状态容器
+     * @brief 获取导航状态
+     * @return 导航状态
      * @warning 该方法在初始化完成后才可调用
      */
-    [[nodiscard]] virtual const NavStates &navStates() const = 0;
+    [[nodiscard]] virtual const NavState &navState() const = 0;
 
     /**
      * @brief 重置初始化器

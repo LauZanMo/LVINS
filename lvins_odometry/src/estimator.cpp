@@ -1,6 +1,7 @@
 #include "lvins_odometry/estimator.h"
 #include "lvins_icp/preprocess/copy.h"
 #include "lvins_icp/preprocess/covariance_estimation.h"
+#include "lvins_odometry/fusion/update_lidar.h"
 
 namespace lvins {
 
@@ -48,9 +49,18 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
     preprocessor_ = std::make_unique<Preprocessor>(config["preprocessor"]);
     LVINS_INFO("Printing preprocessor parameters:\n{}", *preprocessor_);
 
-    // // 初始化点云配准器
+    // 初始化点云配准器
     point_cloud_aligner_ = std::make_shared<PointCloudAligner>(config["point_cloud_aligner"]);
     LVINS_INFO("Printing point cloud aligner parameters:\n{}", *point_cloud_aligner_);
+
+    // 初始化ESKF
+    std::vector<SE3f> T_bs;
+    if (lidar_rig_)
+        T_bs.insert(T_bs.end(), lidar_rig_->Tbs().begin(), lidar_rig_->Tbs().end());
+    if (camera_rig_)
+        T_bs.insert(T_bs.end(), camera_rig_->Tbs().begin(), camera_rig_->Tbs().end());
+    eskf_ = std::make_unique<ESKF>(config["eskf"], *noise_params_, g_w, T_bs);
+    LVINS_INFO("Printing ESKF parameters:\n{}", *eskf_);
 
     // 初始化局部建图器
     local_mapper_ = std::make_shared<NearestNeighborSearch>(config["local_mapper"]);
@@ -71,6 +81,7 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
     const auto estimator_config = config["estimator"];
     cov_estimation_neighbors_   = YAML::get<size_t>(estimator_config, "cov_estimation_neighbors");
     min_icp_points_             = YAML::get<size_t>(estimator_config, "min_icp_points");
+    use_imu_prior_              = YAML::get<bool>(estimator_config, "use_imu_prior");
     estimate_extrinsic_         = YAML::get<bool>(estimator_config, "estimate_extrinsic");
 
     // 启动估计线程
@@ -114,60 +125,6 @@ void Estimator::addImu(const Imu &imu) {
 
     // 将IMU加入缓冲区
     imu_buffer_.push(std::move(input));
-
-    /*if (status_ == EstimatorStatus::INITIALIZING) {
-        // 初始化器添加IMU数据
-        initializer_->addImu(input);
-
-        // 初始化器添加雷达帧束
-        LidarFrameBundle::Ptr lidar_frame_bundle;
-        while (lidar_lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
-            lidar_frame_bundle->setTbs(lidar_rig_->Tbs());
-            initializer_->addLidarFrameBundle(lidar_frame_bundle);
-        }
-
-        // 尝试初始化
-        if (initializer_->tryInitialize()) {
-            // 初始化ESKF
-            // eskf_->initialize(initializer_->navStates(), initializer_->imus());
-
-            // 初始化局部地图并绘制
-            for (const auto &bundle: initializer_->lidarFrameBundles()) {
-                for (size_t i = 0; i < bundle->size(); ++i) {
-                    const auto &frame = bundle->frame(i);
-                    local_mapper_->insert(*frame->pointCloud(), frame->Twf());
-                }
-                drawer_->updateLidarFrameBundle(bundle->timestamp(), bundle);
-            }
-
-            // 绘制初始导航状态
-            // drawer_->updateNavState(eskf_->predictState().timestamp, eskf_->predictState());
-
-            // 更新状态标志位
-            status_ = EstimatorStatus::ESTIMATING;
-        }
-    } else if (status_ == EstimatorStatus::ESTIMATING) {
-        static NavState state(initializer_->navStates().back());
-        LidarFrameBundle::Ptr lidar_frame_bundle;
-        while (lidar_lidar_frame_bundle_buffer_.tryPop(lidar_frame_bundle)) {
-            state.timestamp = lidar_frame_bundle->timestamp();
-            lidar_frame_bundle->setTbs(lidar_rig_->Tbs());
-            const auto result = point_cloud_aligner_->align(local_mapper_->getSearch(),
-                                                            lidar_frame_bundle->pointClouds(), *noise_params_, state.T,
-                                                            lidar_frame_bundle->Tbs(), estimate_extrinsic_);
-
-            state.T = result.T_tb;
-            lidar_frame_bundle->setState(state);
-
-            for (size_t i = 0; i < lidar_frame_bundle->size(); ++i) {
-                const auto &frame = lidar_frame_bundle->frame(i);
-                local_mapper_->insert(*frame->pointCloud(), frame->Twf());
-            }
-
-            drawer_->updateLidarFrameBundle(lidar_frame_bundle->timestamp(), lidar_frame_bundle);
-            drawer_->updateNavState(state.timestamp, state);
-        }
-    }*/
 }
 
 void Estimator::addPointClouds(int64_t timestamp, const std::vector<RawPointCloud::Ptr> &raw_point_clouds) {
@@ -179,10 +136,10 @@ void Estimator::addPointClouds(int64_t timestamp, const std::vector<RawPointClou
     size_t icp_points = 0;
     LVINS_START_TIMER(lidar_preprocess_timer_);
     for (size_t i = 0; i < raw_point_clouds.size(); ++i) {
-        auto raw_point_cloud = preprocessor_->process(raw_point_clouds[i]);
-        lidar_frames[i] = std::make_shared<LidarFrame>(timestamp, lidar_rig_->lidar(i), std::move(raw_point_cloud));
-        estimateCovariance(*lidar_frames[i]->rawPointCloud(), cov_estimation_neighbors_);
-        icp_points += lidar_frames[i]->rawPointCloud()->size();
+        lidar_frames[i] = std::make_shared<LidarFrame>(timestamp, lidar_rig_->lidar(i), raw_point_clouds[i]);
+        lidar_frames[i]->preprocessPointCloud() = preprocessor_->process(lidar_frames[i]->rawPointCloud());
+        estimateCovariance(*lidar_frames[i]->preprocessPointCloud(), cov_estimation_neighbors_);
+        icp_points += lidar_frames[i]->preprocessPointCloud()->size();
     }
     LVINS_STOP_TIMER(lidar_preprocess_timer_);
     LVINS_PRINT_TIMER_MS("Lidar preprocess", lidar_preprocess_timer_);
@@ -223,7 +180,85 @@ void Estimator::estimateLoop() {
         LVINS_INFO("IMUs timestamp range: [{} - {}]", LVINS_GROUP_DIGITS(cur_imus_.front().timestamp),
                    LVINS_GROUP_DIGITS(cur_imus_.back().timestamp));
 
+        if (status_ == EstimatorStatus::INITIALIZING) {
+            // 初始化时不进行点云矫正
+            for (size_t i = 0; i < cur_lidar_frame_bundle_->size(); ++i) {
+                const auto &frame   = cur_lidar_frame_bundle_->frame(i);
+                frame->pointCloud() = copy(*frame->preprocessPointCloud());
+            }
 
+            // 尝试初始化
+            if (initializer_->tryInitialize(cur_lidar_frame_bundle_, cur_imus_)) {
+                // 初始化ESKF
+                eskf_->initialize(initializer_->navState());
+
+                // 初始化局部地图并绘制
+                for (const auto &bundle: initializer_->lidarFrameBundles()) {
+                    for (size_t i = 0; i < bundle->size(); ++i) {
+                        const auto &frame = bundle->frame(i);
+                        local_mapper_->insert(*frame->pointCloud(), frame->Twf());
+                    }
+                    drawer_->updateLidarFrameBundle(bundle->timestamp(), bundle);
+                }
+
+                // 绘制初始导航状态
+                drawer_->updateNavState(eskf_->state().timestamp, eskf_->state());
+
+                // 更新状态标志位
+                status_ = EstimatorStatus::ESTIMATING;
+            }
+        } else if (status_ == EstimatorStatus::ESTIMATING) {
+            // IMU预测
+            const auto states = eskf_->propagate(cur_imus_);
+            cur_lidar_frame_bundle_->setState(eskf_->state());
+            // const auto predict_state = eskf_->state();
+
+            // 如果使用IMU先验，则进行点云矫正
+            LVINS_START_TIMER(deskew_timer_);
+            for (size_t i = 0; i < cur_lidar_frame_bundle_->size(); ++i) {
+                const auto &frame = cur_lidar_frame_bundle_->frame(i);
+                if (use_imu_prior_) {
+                    // frame->pointCloud() = deskew(*frame->preprocessPointCloud(), frame->lidar(), frame->Tbs(), states);
+                    frame->pointCloud() = copy(*frame->preprocessPointCloud());
+                } else {
+                    frame->pointCloud() = copy(*frame->preprocessPointCloud());
+                }
+            }
+            LVINS_STOP_TIMER(deskew_timer_);
+            LVINS_PRINT_TIMER_MS("Deskew", deskew_timer_);
+
+            // 量测更新
+            if (lidar_rig_ && !camera_rig_) {
+                const auto task = std::make_shared<eskf::UpdateLidar>(
+                        cur_lidar_frame_bundle_->timestamp(), cur_lidar_frame_bundle_, *lidar_rig_,
+                        *point_cloud_aligner_, *local_mapper_, *drawer_, 0, estimate_extrinsic_);
+                eskf_->update(task);
+            }
+            // const auto update_state = eskf_->state();
+
+            /*static NavState state(initializer_->navState());
+            state.timestamp = cur_lidar_frame_bundle_->timestamp();
+
+            for (size_t i = 0; i < cur_lidar_frame_bundle_->size(); ++i) {
+                cur_lidar_frame_bundle_->frame(i)->pointCloud() =
+                        copy(*cur_lidar_frame_bundle_->frame(i)->preprocessPointCloud());
+            }
+
+            const auto result = point_cloud_aligner_->align(
+                    local_mapper_->getSearch(), cur_lidar_frame_bundle_->pointClouds(), *noise_params_, state.T,
+                    cur_lidar_frame_bundle_->Tbs(), estimate_extrinsic_);
+
+            state.T = result.T_tb;
+            cur_lidar_frame_bundle_->setState(state);
+
+            for (size_t i = 0; i < cur_lidar_frame_bundle_->size(); ++i) {
+                const auto &frame = cur_lidar_frame_bundle_->frame(i);
+                local_mapper_->insert(*frame->pointCloud(), frame->Twf());
+            }
+
+            drawer_->updateLidarFrameBundle(cur_lidar_frame_bundle_->timestamp(), cur_lidar_frame_bundle_);
+            drawer_->updateNavState(state.timestamp, state);*/
+        }
 
         // 检查是否需要重置，重置后需要同步缓冲区
         if (reset_) {

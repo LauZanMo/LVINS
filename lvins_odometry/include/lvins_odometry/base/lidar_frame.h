@@ -98,6 +98,18 @@ public:
     [[nodiscard]] RawPointCloud::ConstPtr rawPointCloud() const;
 
     /**
+     * @brief 获取预处理后的点云
+     * @return 预处理后的点云
+     */
+    [[nodiscard]] RawPointCloud::Ptr &preprocessPointCloud();
+
+    /**
+     * @brief 获取预处理后的点云
+     * @return 预处理后的点云
+     */
+    [[nodiscard]] RawPointCloud::ConstPtr preprocessPointCloud() const;
+
+    /**
      * @brief 获取帧点云
      * @return 帧点云
      */
@@ -117,14 +129,15 @@ public:
 
 private:
     // 帧信息
-    int64_t timestamp_;                  ///< 时间戳（ns）
-    long id_;                            ///< 帧id（历史唯一）
-    long bundle_id_{-1};                 ///< 帧束id（用于多目，历史唯一）
-    const LidarGeometryBase &lidar_;     ///< 帧所属的雷达
-    SE3f T_wf_;                          ///< 世界坐标系到帧坐标系的变换
-    SE3f T_bs_;                          ///< 帧所属传感器外参
-    RawPointCloud::Ptr raw_point_cloud_; ///< 原始点云
-    PointCloud::Ptr point_cloud_;        ///< 帧点云（去畸变后的点云）
+    int64_t timestamp_;                         ///< 时间戳（ns）
+    long id_;                                   ///< 帧id（历史唯一）
+    long bundle_id_{-1};                        ///< 帧束id（用于多目，历史唯一）
+    const LidarGeometryBase &lidar_;            ///< 帧所属的雷达
+    SE3f T_wf_;                                 ///< 世界坐标系到帧坐标系的变换
+    SE3f T_bs_;                                 ///< 帧所属传感器外参
+    RawPointCloud::Ptr raw_point_cloud_;        ///< 原始点云
+    RawPointCloud::Ptr preprocess_point_cloud_; ///< 预处理后的点云（去畸变前的点云）
+    PointCloud::Ptr point_cloud_;               ///< 帧点云（去畸变后的点云）
 };
 
 } // namespace lvins

@@ -52,6 +52,14 @@ RawPointCloud::ConstPtr LidarFrame::rawPointCloud() const {
     return raw_point_cloud_;
 }
 
+RawPointCloud::Ptr &LidarFrame::preprocessPointCloud() {
+    return preprocess_point_cloud_;
+}
+
+RawPointCloud::ConstPtr LidarFrame::preprocessPointCloud() const {
+    return preprocess_point_cloud_;
+}
+
 PointCloud::Ptr &LidarFrame::pointCloud() {
     return point_cloud_;
 }
@@ -61,7 +69,7 @@ PointCloud::ConstPtr LidarFrame::pointCloud() const {
 }
 
 std::string LidarFrame::print() const {
-    LVINS_CHECK(raw_point_cloud_ && point_cloud_,
+    LVINS_CHECK(raw_point_cloud_ && preprocess_point_cloud_ && point_cloud_,
                 "Raw point cloud and point cloud should be initialized before print!");
     return LVINS_FORMAT("Lidar frame #{}:\n"
                         "  timestamp: {}\n"
@@ -70,10 +78,11 @@ std::string LidarFrame::print() const {
                         "  T_wf: {}\n"
                         "  T_bs: {}\n"
                         "  raw point cloud: {}\n"
+                        "  preprocess point cloud: {}\n"
                         "  point cloud: {}",
                         LVINS_GROUP_DIGITS(id_), LVINS_GROUP_DIGITS(timestamp_), LVINS_GROUP_DIGITS(bundle_id_),
                         lidar_.label(), LVINS_VECTOR_FMT(T_wf_.params()), LVINS_VECTOR_FMT(T_bs_.params()),
-                        *raw_point_cloud_, *point_cloud_);
+                        *raw_point_cloud_, *preprocess_point_cloud_, *point_cloud_);
 }
 
 } // namespace lvins

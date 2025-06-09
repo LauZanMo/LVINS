@@ -27,7 +27,7 @@ PointCloudAligner::PointCloudAligner(const YAML::Node &config) {
     params_->setRelativeErrorTol(relative_error_eps);
     if (verbosity) {
         params_->callback = [](auto &&status, auto && /*values*/) {
-            LVINS_INFO("Printing optimization status:\n{}", status.to_string());
+            LVINS_DEBUG("Printing optimization status:\n{}", status.to_string());
         };
     }
 }
@@ -78,8 +78,8 @@ PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::
         }
 
         // 外参因子
-        const auto &ext_rot_std   = noise_params.extrinsic_rot_std;
-        const auto &ext_trans_std = noise_params.extrinsic_trans_std;
+        const auto &ext_rot_std   = noise_params.ext_rot_std;
+        const auto &ext_trans_std = noise_params.ext_trans_std;
         // clang-format off
         const auto ext_noise_model = gtsam::noiseModel::Diagonal::Sigmas(
                 (gtsam::Vector(6) << ext_rot_std, ext_rot_std, ext_rot_std,
@@ -137,8 +137,6 @@ PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::
 
         return converged;
     };
-    graph.print("Point Cloud Alignment Graph:");
-    values.print("Initial Values:");
     gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, *params_);
     values = optimizer.optimize();
 
@@ -176,8 +174,8 @@ void PointCloudAligner::addFactor(const NearestNeighborSearch::Search::ConstPtr 
         }
 
         // 外参因子
-        const auto &ext_rot_std   = noise_params.extrinsic_rot_std;
-        const auto &ext_trans_std = noise_params.extrinsic_trans_std;
+        const auto &ext_rot_std   = noise_params.ext_rot_std;
+        const auto &ext_trans_std = noise_params.ext_trans_std;
         // clang-format off
         const auto ext_noise_model = gtsam::noiseModel::Diagonal::Sigmas(
                 (gtsam::Vector(6) << ext_rot_std, ext_rot_std, ext_rot_std,

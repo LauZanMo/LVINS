@@ -21,29 +21,13 @@ public:
     StaticInitializer(const VecXf &parameters, Vec3f g_w);
 
     /**
-     * @brief 添加IMU数据
-     * @param imu IMU数据
-     */
-    void addImu(const Imu &imu) override;
-
-    /**
-     * @brief 添加雷达帧束
-     * @param bundle 雷达帧束
-     */
-    void addLidarFrameBundle(const LidarFrameBundle::Ptr &bundle) override;
-
-    /**
      * @brief 尝试初始化
+     * @note 初始化成功会改变帧束导航状态
+     * @param lidar_frame_bundle 新的雷达帧束
+     * @param imus 新的IMU数据
      * @return 是否初始化成功
      */
-    [[nodiscard]] bool tryInitialize() override;
-
-    /**
-     * @brief 获取IMU数据容器
-     * @return IMU数据容器
-     * @warning 该方法在初始化完成后才可调用
-     */
-    [[nodiscard]] const Imus &imus() const override;
+    [[nodiscard]] bool tryInitialize(const LidarFrameBundle::Ptr &lidar_frame_bundle, const Imus &imus) override;
 
     /**
      * @brief 获取雷达帧束容器
@@ -53,11 +37,11 @@ public:
     [[nodiscard]] const std::vector<LidarFrameBundle::Ptr> &lidarFrameBundles() const override;
 
     /**
-     * @brief 获取导航状态容器
-     * @return 导航状态容器
+     * @brief 获取导航状态
+     * @return 导航状态
      * @warning 该方法在初始化完成后才可调用
      */
-    [[nodiscard]] const NavStates &navStates() const override;
+    [[nodiscard]] const NavState &navState() const override;
 
     /**
      * @brief 重置初始化器
@@ -85,7 +69,7 @@ public:
 private:
     Imus imus_;                                              ///< 用于初始化的IMU数据容器
     std::vector<LidarFrameBundle::Ptr> lidar_frame_bundles_; ///< 用于初始化的雷达帧束容器
-    NavStates nav_states_;                                   ///< 用于初始化的导航状态容器
+    NavState nav_state_;                                     ///< 用于初始化的导航状态
 
     Float zero_gyr_thresh_; ///< 陀螺仪零速阈值
     Float zero_acc_thresh_; ///< 加速度零速阈值

@@ -21,11 +21,11 @@ add_library(${PROJECT_NAME} SHARED
     src/base/lidar_frame_bundle.cpp
     src/init/initializer_base.cpp
     src/init/static_initializer.cpp
-    # src/fusion/eskf.cpp
-    # src/fusion/update_task.cpp
-    # src/fusion/iterative_update_task.cpp
+    src/fusion/eskf.cpp
+    src/fusion/update_task.cpp
+    src/fusion/iterative_update_task.cpp
+    src/fusion/update_lidar.cpp
     src/fusion/ins_helper.cpp
-    # src/fusion/update_lidar_frame_bundle.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

@@ -12,20 +12,18 @@ StaticInitializer::StaticInitializer(const VecXf &parameters, Vec3f g_w) : Initi
     zero_acc_thresh_ = parameters[2];
 }
 
-void StaticInitializer::addImu(const Imu &imu) {
-    imus_.push_back(imu);
-}
+bool StaticInitializer::tryInitialize(const LidarFrameBundle::Ptr &lidar_frame_bundle, const Imus &imus) {
+    LVINS_CHECK(!imus.empty(), "Imus should not be empty!");
 
-void StaticInitializer::addLidarFrameBundle(const LidarFrameBundle::Ptr &bundle) {
-    lidar_frame_bundles_.push_back(bundle);
-}
-
-bool StaticInitializer::tryInitialize() {
     if (!initialized_) {
-        // 检测零速
+        // 追加IMU并检测零速
+        const long offset = imus_.empty() ? 0 : 1; ///< 上一IMU容器尾部元素与当前imu容器头部元素相等，需要剔除
+        imus_.insert(imus_.end(), imus.begin() + offset, imus.end());
+        lidar_frame_bundles_.push_back(lidar_frame_bundle);
         if (!ins_helper::detectZeroVelocity(imus_, zero_gyr_thresh_, zero_acc_thresh_)) {
             LVINS_WARN("Please keep static to initialize!");
             imus_.clear();
+            lidar_frame_bundles_.clear();
             return false;
         }
 
@@ -50,40 +48,27 @@ bool StaticInitializer::tryInitialize() {
         att[1] = LVINS_FLOAT(atan(ave_acc[0] / sqrt(ave_acc[1] * ave_acc[1] + ave_acc[2] * ave_acc[2])));
         att[2] = 0.0;
 
-        // 构建初始状态
+        // 构建初始导航状态
         const SE3f T_wb(rotation_helper::toSO3(att), Vec3f::Zero());
-        NavState state(imus_.front().timestamp, T_wb, Vec3f::Zero(), ave_gyr, ave_acc + T_wb.so3().inverse() * g_w_);
+        nav_state_ =
+                NavState(imus_.front().timestamp, T_wb, Vec3f::Zero(), ave_gyr, ave_acc + T_wb.so3().inverse() * g_w_);
 
-        // 重构帧束容器，仅保留在imus_时间戳范围内的帧束
-        lidar_frame_bundles_.erase(std::remove_if(lidar_frame_bundles_.begin(), lidar_frame_bundles_.end(),
-                                                  [this](const LidarFrameBundle::Ptr &bundle) {
-                                                      return bundle->timestamp() < imus_.front().timestamp ||
-                                                             bundle->timestamp() > imus_.back().timestamp;
-                                                  }),
-                                   lidar_frame_bundles_.end());
+        // 构件帧束导航状态
         for (const auto &bundle: lidar_frame_bundles_) {
-            state.timestamp = bundle->timestamp();
-            bundle->setState(state);
-        }
-
-        // 构建导航状态容器，时间戳和长度与IMU数据容器一致
-        nav_states_ = NavStates(imus_.size(), state);
-        for (size_t i = 0; i < imus_.size(); ++i) {
-            nav_states_[i].timestamp = imus_[i].timestamp;
+            nav_state_.timestamp = bundle->timestamp();
+            bundle->setState(nav_state_);
         }
 
         // 使能标志位并打印状态
         initialized_ = true;
-        LVINS_INFO("Static initialize done!\nState:\n{}\nIMUs size: {}\nLidar frame bundle size: {}", state,
-                   imus_.size(), lidar_frame_bundles_.size());
+        LVINS_INFO("Static initialize done!\n"
+                   "  State:\n{}\n"
+                   "  IMUs size: {}\n"
+                   "  Lidar frame bundle size: {}",
+                   nav_state_, imus_.size(), lidar_frame_bundles_.size());
     }
 
     return true;
-}
-
-const Imus &StaticInitializer::imus() const {
-    LVINS_CHECK(initialized_, "IMUs should be accessed after initialized!");
-    return imus_;
 }
 
 const std::vector<LidarFrameBundle::Ptr> &StaticInitializer::lidarFrameBundles() const {
@@ -91,9 +76,9 @@ const std::vector<LidarFrameBundle::Ptr> &StaticInitializer::lidarFrameBundles()
     return lidar_frame_bundles_;
 }
 
-const NavStates &StaticInitializer::navStates() const {
+const NavState &StaticInitializer::navState() const {
     LVINS_CHECK(initialized_, "Nav states should be accessed after initialized!");
-    return nav_states_;
+    return nav_state_;
 }
 
 void StaticInitializer::reset() {
@@ -102,7 +87,7 @@ void StaticInitializer::reset() {
     // 清空容器
     imus_.clear();
     lidar_frame_bundles_.clear();
-    nav_states_.clear();
+    nav_state_ = NavState();
 
     // 重置标志位
     initialized_ = false;

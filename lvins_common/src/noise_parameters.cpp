@@ -24,8 +24,8 @@ NoiseParameters::NoiseParameters(const YAML::Node &config) {
     odom_trans_std = YAML::get<double>(config, "odom_trans_std");
 
     // 外参参数
-    extrinsic_rot_std   = YAML::get<double>(config, "extrinsic_rot_std");
-    extrinsic_trans_std = YAML::get<double>(config, "extrinsic_trans_std");
+    ext_rot_std   = YAML::get<double>(config, "ext_rot_std");
+    ext_trans_std = YAML::get<double>(config, "ext_trans_std");
 }
 
 YAML::Node NoiseParameters::writeToYaml() const {
@@ -48,8 +48,8 @@ YAML::Node NoiseParameters::writeToYaml() const {
     node["odom_rot_std"]   = odom_rot_std;
     node["odom_trans_std"] = odom_trans_std;
 
-    node["extrinsic_rot_std"]   = extrinsic_rot_std;
-    node["extrinsic_trans_std"] = extrinsic_trans_std;
+    node["ext_rot_std"]   = ext_rot_std;
+    node["ext_trans_std"] = ext_trans_std;
 
     return node;
 }
@@ -74,7 +74,7 @@ std::string NoiseParameters::print() const {
                         "  extrinsic translation std = {}",
                         prior_roll_pitch_std, prior_yaw_std, prior_pos_std, prior_vel_std, prior_gyr_bias_std,
                         prior_acc_bias_std, gyr_std, acc_std, gyr_bias_std, acc_bias_std, integration_std,
-                        init_bias_std, odom_rot_std, odom_trans_std, extrinsic_rot_std, extrinsic_trans_std);
+                        init_bias_std, odom_rot_std, odom_trans_std, ext_rot_std, ext_trans_std);
 }
 
 } // namespace lvins
