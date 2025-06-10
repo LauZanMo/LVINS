@@ -74,11 +74,16 @@ local_mapper:
         max_num_points_in_cell: 20 # 容器中最大点数
 
 initializer:
-    type: "static" # 静态初始化器
+    # type: "static" # 静态初始化器
+    # parameters:
+    #     rows: 3
+    #     cols: 1
+    #     data: [ 1.0, 0.02, 0.2 ] # 参数顺序 [初始化周期（s）、陀螺仪零速阈值（rad/s）、加速度零速阈值（m/s^2）]
+    type: "dynamic" # 静态初始化器
     parameters:
-        rows: 3
+        rows: 1
         cols: 1
-        data: [ 1.0, 0.02, 0.2 ] # 参数顺序 [初始化周期（s）、陀螺仪零速阈值（rad/s）、加速度零速阈值（m/s^2）]
+        data: [ 10 ] # 参数顺序 [缓冲区阈值]
 
 estimator:
     cov_estimation_neighbors: 5 # 点云协方差估计的最近邻数

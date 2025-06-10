@@ -67,7 +67,7 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
     LVINS_INFO("Printing local mapper parameters:\n{}", *local_mapper_);
 
     // 加载初始化器
-    initializer_ = InitializerBase::loadFromYaml(config["initializer"], g_w);
+    initializer_ = InitializerBase::loadFromYaml(config["initializer"], *noise_params_, *point_cloud_aligner_, g_w);
     LVINS_INFO("Printing initializer parameters:\n{}", *initializer_);
 
     // 初始化时间轮调度器

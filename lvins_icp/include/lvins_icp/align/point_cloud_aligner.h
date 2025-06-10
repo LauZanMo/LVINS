@@ -38,6 +38,18 @@ public:
     [[nodiscard]] YAML::Node writeToYaml() const;
 
     /**
+     * @brief 配准点云（不估计外参，用于动态初始化）
+     * @param target_point_clouds 目标点云集合
+     * @param source_point_clouds 源点云集合
+     * @param init_T_tb 目标点云到载体的初始相对位姿
+     * @param init_T_bs 初始雷达外参集合
+     * @return 配准结果
+     */
+    [[nodiscard]] Result align(const std::vector<PointCloud::ConstPtr> &target_point_clouds,
+                               const std::vector<PointCloud::ConstPtr> &source_point_clouds, const SE3f &init_T_tb,
+                               const std::vector<SE3f> &init_T_bs) const;
+
+    /**
      * @brief 配准点云
      * @param target_nn_search 目标点云的最近邻搜索器
      * @param source_point_clouds 源点云集合

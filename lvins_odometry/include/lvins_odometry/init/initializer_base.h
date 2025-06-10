@@ -2,6 +2,7 @@
 
 #include "lvins_common/sensor/imu.h"
 #include "lvins_common/yaml/yaml_serialization.h"
+#include "lvins_icp/align/point_cloud_aligner.h"
 #include "lvins_odometry/base/lidar_frame_bundle.h"
 
 namespace lvins {
@@ -16,9 +17,11 @@ public:
 
     /**
      * @brief 构造函数
+     * @param noise_params 噪声参数
+     * @param aligner 点云配准器
      * @param g_w 世界坐标系下的重力向量
      */
-    explicit InitializerBase(Vec3f g_w);
+    InitializerBase(const NoiseParameters &noise_params, const PointCloudAligner &aligner, Vec3f g_w);
 
     /**
      * @brief 默认析构函数
@@ -28,10 +31,13 @@ public:
     /**
      * @brief 从YAML节点中加载初始化器
      * @param config YAML节点
+     * @param noise_params 噪声参数
+     * @param aligner 点云配准器
      * @param g_w 世界坐标系下的重力向量
      * @return 所加载的初始化器
      */
-    static Ptr loadFromYaml(const YAML::Node &config, Vec3f g_w);
+    static Ptr loadFromYaml(const YAML::Node &config, const NoiseParameters &noise_params,
+                            const PointCloudAligner &aligner, Vec3f g_w);
 
     /**
      * @brief 将初始化器参数写入YAML节点
@@ -85,8 +91,10 @@ public:
     [[nodiscard]] virtual std::string print() const = 0;
 
 protected:
-    Vec3f g_w_;               ///< 世界坐标系下的重力向量
-    bool initialized_{false}; ///< 初始化标志位
+    const NoiseParameters &noise_params_; ///< 噪声参数
+    const PointCloudAligner &aligner_;    ///< 点云配准器
+    Vec3f g_w_;                           ///< 世界坐标系下的重力向量
+    bool initialized_{false};             ///< 初始化标志位
 };
 
 } // namespace lvins

@@ -16,9 +16,12 @@ public:
     /**
      * @brief 构造函数
      * @param parameters 输入参数，顺序：初始化周期、陀螺仪零速阈值、加速度零速阈值
+     * @param noise_params 噪声参数
+     * @param aligner 点云配准器
      * @param g_w 世界坐标系下的重力向量
      */
-    StaticInitializer(const VecXf &parameters, Vec3f g_w);
+    StaticInitializer(const VecXf &parameters, const NoiseParameters &noise_params, const PointCloudAligner &aligner,
+                      Vec3f g_w);
 
     /**
      * @brief 尝试初始化
@@ -67,8 +70,8 @@ public:
     [[nodiscard]] std::string print() const override;
 
 private:
-    Imus imus_;                                              ///< 用于初始化的IMU数据容器
-    std::vector<LidarFrameBundle::Ptr> lidar_frame_bundles_; ///< 用于初始化的雷达帧束容器
+    Imus imus_;                                              ///< 用于初始化的IMU数据集合
+    std::vector<LidarFrameBundle::Ptr> lidar_frame_bundles_; ///< 用于初始化的雷达帧束集合
     NavState nav_state_;                                     ///< 用于初始化的导航状态
 
     Float zero_gyr_thresh_; ///< 陀螺仪零速阈值

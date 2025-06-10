@@ -44,6 +44,63 @@ YAML::Node PointCloudAligner::writeToYaml() const {
     return node;
 }
 
+PointCloudAligner::Result PointCloudAligner::align(const std::vector<PointCloud::ConstPtr> &target_point_clouds,
+                                                   const std::vector<PointCloud::ConstPtr> &source_point_clouds,
+                                                   const SE3f &init_T_tb, const std::vector<SE3f> &init_T_bs) const {
+    // 初始化因子图
+    gtsam::Values values;
+    gtsam::NonlinearFactorGraph graph;
+
+    // 先验因子
+    values.insert(W(0), gtsam::Pose3());
+    graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(W(0), gtsam::Pose3(),
+                                                           gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+
+    // 点云配准因子
+    gtsam::Pose3 last_T_tb = toPose3(init_T_tb);
+    values.insert(B(0), toPose3(init_T_tb));
+    for (size_t i = 0; i < source_point_clouds.size(); ++i) {
+        const auto transform_target_point_cloud = transform(*target_point_clouds[i], init_T_bs[i]);
+        const auto transform_source_point_cloud = transform(*source_point_clouds[i], init_T_bs[i]);
+        const auto icp_factor                   = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(
+                W(0), B(0), transform_target_point_cloud, transform_source_point_cloud);
+        icp_factor->set_num_threads(num_threads_);
+        graph.add(icp_factor);
+    }
+
+    // 优化
+    params_->termination_criteria = [&](const gtsam::Values &optimized_values) {
+        bool converged = false;
+
+        // 位姿收敛判断
+        const auto current_T_tb       = optimized_values.at<gtsam::Pose3>(B(0));
+        const gtsam::Pose3 delta_T_tb = last_T_tb.inverse() * current_T_tb;
+        last_T_tb                     = current_T_tb;
+
+        const double dt_T_tb = current_T_tb.translation().norm();
+        const double dr_T_tb = gtsam::Rot3::Logmap(delta_T_tb.rotation()).norm();
+
+        converged &= dt_T_tb < trans_eps_ && dr_T_tb < rot_eps_;
+
+        // 求解失败的情况
+        if (dt_T_tb < 1e-10 && dr_T_tb < 1e-10) {
+            return false;
+        }
+
+        return converged;
+    };
+    gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, *params_);
+    values = optimizer.optimize();
+
+    // 获取优化结果
+    Result result;
+    result.T_tb       = toSE3(values.at<gtsam::Pose3>(B(0)));
+    result.T_bs       = init_T_bs;
+    result.iterations = optimizer.iterations();
+
+    return result;
+}
+
 PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::Search::ConstPtr &target_nn_search,
                                                    const std::vector<PointCloud::ConstPtr> &source_point_clouds,
                                                    const NoiseParameters &noise_params, const SE3f &init_T_tb,
@@ -151,6 +208,7 @@ PointCloudAligner::Result PointCloudAligner::align(const NearestNeighborSearch::
     } else {
         result.T_bs = init_T_bs;
     }
+    result.iterations = optimizer.iterations();
 
     return result;
 }

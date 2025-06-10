@@ -4,7 +4,9 @@
 
 namespace lvins {
 
-StaticInitializer::StaticInitializer(const VecXf &parameters, Vec3f g_w) : InitializerBase(std::move(g_w)) {
+StaticInitializer::StaticInitializer(const VecXf &parameters, const NoiseParameters &noise_params,
+                                     const PointCloudAligner &aligner, Vec3f g_w)
+    : InitializerBase(noise_params, aligner, std::move(g_w)) {
     LVINS_CHECK(parameters.size() == 3,
                 "Parameters size should be 3! Order: [init_period, zero_gyr_thresh, zero_acc_thresh]");
     init_period_     = static_cast<int64_t>(parameters[0] * 1e9);
