@@ -17,6 +17,7 @@ add_library(${PROJECT_NAME} SHARED
     src/estimator.cpp
     src/drawer_base.cpp
     src/preprocessor.cpp
+    src/drift_detector.cpp
     src/base/lidar_frame.cpp
     src/base/lidar_frame_bundle.cpp
     src/init/initializer_base.cpp

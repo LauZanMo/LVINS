@@ -10,6 +10,7 @@
 #include "lvins_lidar/lidar_rig.h"
 #include "lvins_odometry/base/lidar_frame_bundle.h"
 #include "lvins_odometry/drawer_base.h"
+#include "lvins_odometry/drift_detector.h"
 #include "lvins_odometry/fusion/eskf.h"
 #include "lvins_odometry/init/initializer_base.h"
 #include "lvins_odometry/preprocessor.h"
@@ -115,6 +116,7 @@ private:
     ESKF::Ptr eskf_;                             ///< 扩展卡尔曼滤波器
     NearestNeighborSearch::Ptr local_mapper_;    ///< 局部地图（通过最近邻搜索器实现）
     InitializerBase::Ptr initializer_;           ///< 初始化器
+    DriftDetector::Ptr drift_detector_;          ///< 系统漂移检测器
 
     EstimatorStatus status_{EstimatorStatus::INITIALIZING}; ///< 估计器状态
 

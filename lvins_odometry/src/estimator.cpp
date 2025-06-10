@@ -70,6 +70,10 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::Ptr drawer) : drawer_
     initializer_ = InitializerBase::loadFromYaml(config["initializer"], *noise_params_, *point_cloud_aligner_, g_w);
     LVINS_INFO("Printing initializer parameters:\n{}", *initializer_);
 
+    // 初始化漂移检测器
+    drift_detector_ = std::make_unique<DriftDetector>(config["drift_detector"]);
+    LVINS_INFO("Printing drift detector parameters:\n{}", *drift_detector_);
+
     // 初始化时间轮调度器
     wheel_scheduler_ = std::make_shared<TimeWheelScheduler>();
     wheel_scheduler_->start();
@@ -211,7 +215,7 @@ void Estimator::estimateLoop() {
             // IMU预测
             const auto states = eskf_->propagate(cur_imus_);
             cur_lidar_frame_bundle_->setState(eskf_->state());
-            // const auto predict_state = eskf_->state();
+            const auto predict_state = eskf_->state();
 
             // 如果使用IMU先验，则进行点云矫正
             LVINS_START_TIMER(deskew_timer_);
@@ -234,7 +238,12 @@ void Estimator::estimateLoop() {
                         *point_cloud_aligner_, *local_mapper_, *drawer_, 0, estimate_extrinsic_);
                 eskf_->update(task);
             }
-            // const auto update_state = eskf_->state();
+            const auto measure_state = eskf_->state();
+
+            // 检测漂移
+            if (drift_detector_->detect(predict_state, measure_state)) {
+                reset();
+            }
         }
 
         // 检查是否需要重置，重置后需要同步缓冲区

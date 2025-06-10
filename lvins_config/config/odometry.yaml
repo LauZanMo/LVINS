@@ -85,6 +85,12 @@ initializer:
         cols: 1
         data: [ 10 ] # 参数顺序 [缓冲区阈值]
 
+drift_detector:
+    max_rot_err: 0.2 # 最大旋转误差（rad）
+    max_trans_err: 0.5 # 最大位移误差（m）
+    max_vel_err: 0.5 # 最大速度误差（m/s）
+    verbosity: false # 是否打印详细信息（需要编译时LOG等级为DEBUG）
+
 estimator:
     cov_estimation_neighbors: 5 # 点云协方差估计的最近邻数
     min_icp_points: 100 # 进行ICP的最小点数
