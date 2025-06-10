@@ -29,6 +29,11 @@ def generate_launch_description():
         default_value="/imu0/data_raw",
         description="IMU topic for odometry to subscribe to.",
     )
+    odometry_gnss_topic_arg = DeclareLaunchArgument(
+        "odometry_gnss_topic",
+        default_value="/gnss0/fix",
+        description="GNSS topic for odometry to subscribe to.",
+    )
     odometry_point_cloud_topics_arg = DeclareLaunchArgument(
         "odometry_point_cloud_topics",
         default_value='["/lidar0/point_cloud_raw"]',
@@ -55,6 +60,7 @@ def generate_launch_description():
                 "log_path": LaunchConfiguration("odometry_log_path"),
                 "config_file": LaunchConfiguration("odometry_config_file"),
                 "imu_topic": LaunchConfiguration("odometry_imu_topic"),
+                "gnss_topic": LaunchConfiguration("odometry_gnss_topic"),
                 "point_cloud_topics": LaunchConfiguration(
                     "odometry_point_cloud_topics"
                 ),
@@ -69,6 +75,7 @@ def generate_launch_description():
             odometry_log_path_arg,
             odometry_config_file_arg,
             odometry_imu_topic_arg,
+            odometry_gnss_topic_arg,
             odometry_point_cloud_topics_arg,
             odometry_image_topics_arg,
             odometry_reset_topic_arg,

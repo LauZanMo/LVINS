@@ -18,6 +18,7 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
     declare_parameter<std::string>("log_path", "");
     declare_parameter<std::string>("config_file", "");
     declare_parameter<std::string>("imu_topic", "/imu0/data_raw");
+    declare_parameter<std::string>("gnss_topic", "/gnss0/fix");
     std::vector<std::string> point_cloud_topics = {"/lidar0/point_cloud_raw"};
     declare_parameter<std::vector<std::string>>("point_cloud_topics", point_cloud_topics);
     std::vector<std::string> image_topics = {"/camera0/image_raw"};
@@ -27,6 +28,7 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
     auto log_path          = get_parameter("log_path").as_string();
     auto config_file       = get_parameter("config_file").as_string();
     const auto imu_topic   = get_parameter("imu_topic").as_string();
+    const auto gnss_topic  = get_parameter("gnss_topic").as_string();
     point_cloud_topics     = get_parameter("point_cloud_topics").as_string_array();
     image_topics           = get_parameter("image_topics").as_string_array();
     const auto reset_topic = get_parameter("reset_topic").as_string();
@@ -44,6 +46,7 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
     RCLCPP_INFO(get_logger(), "Log path: %s", log_path.c_str());
     RCLCPP_INFO(get_logger(), "Configuration file: %s", config_file.c_str());
     RCLCPP_INFO(get_logger(), "IMU topic: %s", imu_topic.c_str());
+    RCLCPP_INFO(get_logger(), "GNSS topic: %s", gnss_topic.c_str());
     const auto point_cloud_topics_str = LVINS_FORMAT("[{}]", LVINS_JOIN(point_cloud_topics, ", "));
     RCLCPP_INFO(get_logger(), "Point cloud topics: %s", point_cloud_topics_str.c_str());
     const auto image_topics_str = LVINS_FORMAT("[{}]", LVINS_JOIN(image_topics, ", "));
@@ -72,6 +75,14 @@ OdometryNode::OdometryNode(const std::string &program_name) : Node(program_name,
             this->imuCallback(std::forward<decltype(msg)>(msg));
         };
         imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(imu_topic, qos, cb);
+    }
+
+    { // 创建GNSS订阅
+        using GnssCallback = std::function<void(const sensor_msgs::msg::NavSatFix::ConstSharedPtr &)>;
+        GnssCallback cb    = [this](auto &&msg) {
+            this->gnssCallback(std::forward<decltype(msg)>(msg));
+        };
+        gnss_sub_ = create_subscription<sensor_msgs::msg::NavSatFix>(gnss_topic, qos, cb);
     }
 
     { // 创建点云订阅
@@ -146,6 +157,8 @@ void OdometryNode::imuCallback(const sensor_msgs::msg::Imu::ConstSharedPtr &msg)
     // 输入系统
     estimator_->addImu(imu);
 }
+
+void OdometryNode::gnssCallback(const sensor_msgs::msg::NavSatFix::ConstSharedPtr & /*msg*/) {}
 
 void OdometryNode::pointCloudCallback(size_t idx, const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg) {
     if (point_cloud_sync_->push(idx, msg)) {

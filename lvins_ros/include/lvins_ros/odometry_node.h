@@ -6,6 +6,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
@@ -33,6 +34,12 @@ public:
     void imuCallback(const sensor_msgs::msg::Imu::ConstSharedPtr &msg);
 
     /**
+     * @brief GNSS信息接收回调函数
+     * @param msg GNSS信息
+     */
+    void gnssCallback(const sensor_msgs::msg::NavSatFix::ConstSharedPtr &msg);
+
+    /**
      * @brief 点云信息接收回调函数
      * @param idx 点云所属传感器索引
      * @param msg 点云信息
@@ -50,6 +57,7 @@ private:
     lvins::Estimator::Ptr estimator_; ///< 估计器
 
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;                               ///< IMU信息订阅者
+    rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr gnss_sub_;                        ///< GNSS信息订阅者
     std::vector<rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> point_cloud_subs_; ///< 点云信息订阅者
     rclcpp::CallbackGroup::SharedPtr point_cloud_callback_group_;                                  ///< 点云信息回调组
     std::vector<rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr> image_subs_;             ///< 图像信息订阅者
