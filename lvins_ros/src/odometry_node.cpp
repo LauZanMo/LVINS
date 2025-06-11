@@ -178,7 +178,7 @@ void OdometryNode::pointCloudCallback(size_t idx, const sensor_msgs::msg::PointC
         }
 
         // 输入系统
-        const auto timestamp = rclcpp::Time(point_cloud_msgs[0]->header.stamp).nanoseconds();
+        const auto timestamp = raw_point_clouds[0]->times[raw_point_clouds[0]->size() - 1]; // TODO: 优化
         estimator_->addPointClouds(timestamp, raw_point_clouds);
     }
 }

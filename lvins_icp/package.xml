@@ -20,6 +20,7 @@
     <buildtool_depend>ament_cmake</buildtool_depend>
     <depend>lvins_config</depend>
     <depend>lvins_common</depend>
+    <depend>lvins_lidar</depend>
 
     <!-- 导出可执行文件 -->
     <export>

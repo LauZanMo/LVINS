@@ -8,6 +8,7 @@ find_package(gtsam_points REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(lvins_config REQUIRED)
 find_package(lvins_common REQUIRED)
+find_package(lvins_lidar REQUIRED)
 
 # 通用设置
 lvins_setup()
@@ -19,6 +20,8 @@ add_library(${PROJECT_NAME} SHARED
     src/preprocess/voxel_grid_sample.cpp
     src/preprocess/covariance_estimation.cpp
     src/preprocess/copy.cpp
+    src/preprocess/deskew.cpp
+    src/preprocess/remove_invalid_points.cpp
     src/align/point_cloud_aligner.cpp
     src/align/nearest_neighbor_search.cpp
     src/align/result.cpp
@@ -33,6 +36,7 @@ target_link_libraries(${PROJECT_NAME}
 ament_target_dependencies(${PROJECT_NAME}
     lvins_config
     lvins_common
+    lvins_lidar
 )
 
 # 安装
@@ -53,5 +57,6 @@ ament_export_dependencies(
     gtsam_points
     lvins_config
     lvins_common
+    lvins_lidar
 )
 ament_package()

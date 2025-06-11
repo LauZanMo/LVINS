@@ -14,12 +14,12 @@ namespace lvins::point_cloud_converter {
 std::string detectLidarType(const sensor_msgs::msg::PointCloud2 &msg);
 
 /**
- * @brief 将ROS点云格式数据转换为内部点云格式
+ * @brief 将ROS点云格式数据转换为内部原始点云格式
  * @param msg ROS点云格式数据
  * @param lidar_type 雷达类型
- * @return 内部点云格式数据
+ * @return 内部原始点云格式数据
  */
-PointCloud::Ptr convert(const sensor_msgs::msg::PointCloud2 &msg, const std::string &lidar_type);
+RawPointCloud::Ptr convert(const sensor_msgs::msg::PointCloud2 &msg, const std::string &lidar_type);
 
 /**
  * @brief 将内部点云格式数据转换为ROS点云格式

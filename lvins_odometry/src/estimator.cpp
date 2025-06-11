@@ -1,6 +1,7 @@
 #include "lvins_odometry/estimator.h"
 #include "lvins_icp/preprocess/copy.h"
 #include "lvins_icp/preprocess/covariance_estimation.h"
+#include "lvins_icp/preprocess/deskew.h"
 #include "lvins_odometry/fusion/update_lidar.h"
 
 namespace lvins {
@@ -222,8 +223,7 @@ void Estimator::estimateLoop() {
             for (size_t i = 0; i < cur_lidar_frame_bundle_->size(); ++i) {
                 const auto &frame = cur_lidar_frame_bundle_->frame(i);
                 if (use_imu_prior_) {
-                    // frame->pointCloud() = deskew(*frame->preprocessPointCloud(), frame->lidar(), frame->Tbs(), states);
-                    frame->pointCloud() = copy(*frame->preprocessPointCloud());
+                    frame->pointCloud() = deskew(*frame->preprocessPointCloud(), frame->lidar(), frame->Tbs(), states);
                 } else {
                     frame->pointCloud() = copy(*frame->preprocessPointCloud());
                 }

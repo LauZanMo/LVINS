@@ -23,6 +23,7 @@ using Mat32d = Eigen::Matrix<double, 3, 2>;
 using Mat33f = Eigen::Matrix<Float, 3, 3>;
 using Mat33d = Eigen::Matrix<double, 3, 3>;
 using Mat44f = Eigen::Matrix<Float, 4, 4>;
+using Mat44d = Eigen::Matrix<double, 4, 4>;
 using MatXf  = Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic>;
 using MatXd  = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 

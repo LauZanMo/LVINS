@@ -30,7 +30,7 @@ std::string detectLidarType(const sensor_msgs::msg::PointCloud2 &msg) {
     return {};
 }
 
-PointCloud::Ptr convert(const sensor_msgs::msg::PointCloud2 &msg, const std::string &lidar_type) {
+RawPointCloud::Ptr convert(const sensor_msgs::msg::PointCloud2 &msg, const std::string &lidar_type) {
     const size_t num_points = msg.width * msg.height;
 
     int x_type         = 0;
@@ -70,7 +70,7 @@ PointCloud::Ptr convert(const sensor_msgs::msg::PointCloud2 &msg, const std::str
                         x_type == z_type,
                 "Message point type should be FLOAT32 or FLOAT64!");
 
-    const auto point_cloud = std::make_shared<PointCloud>();
+    const auto point_cloud = std::make_shared<RawPointCloud>();
 
     // 点云
     std::vector<Point> points;
