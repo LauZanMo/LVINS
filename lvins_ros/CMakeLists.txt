@@ -68,7 +68,7 @@ ament_target_dependencies(data_recorder_node
     rosbag2_cpp
 )
 
-# 安装
+# 安装可执行文件
 install(TARGETS odometry_node
     DESTINATION lib/${PROJECT_NAME}
 )
@@ -76,10 +76,18 @@ install(TARGETS data_recorder_node
     DESTINATION lib/${PROJECT_NAME}
 )
 
+# 安装python脚本
+install(PROGRAMS
+    scripts/las_saver_node.py
+    DESTINATION lib/${PROJECT_NAME}
+)
+
+# 安装头文件
 install(DIRECTORY include/
     DESTINATION include
 )
 
+# 安装启动文件
 install(DIRECTORY
     launch
     DESTINATION share/${PROJECT_NAME}
