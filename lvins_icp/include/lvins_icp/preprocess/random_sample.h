@@ -10,7 +10,6 @@ namespace lvins {
  * @param sample_rate 采样率
  * @return 采样点云
  */
-PointCloud::Ptr randomSample(const PointCloud::ConstPtr &point_cloud,
-                             float sample_rate);
+PointCloud::Ptr randomSample(const PointCloud::ConstPtr &point_cloud, float sample_rate);
 
 } // namespace lvins
