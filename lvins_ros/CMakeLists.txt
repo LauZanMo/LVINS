@@ -18,12 +18,13 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(cv_bridge REQUIRED)
-find_package(rosbag2_transport REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
 
 # 通用设置
 lvins_setup()
 
 # 添加可执行文件
+# odometry_node
 add_executable(odometry_node
     src/odometry_node.cpp
     src/impl/drawer_rviz.cpp
@@ -48,11 +49,30 @@ ament_target_dependencies(odometry_node
     nav_msgs
     tf2_ros
     cv_bridge
-    rosbag2_transport
+)
+
+# data_recorder_node
+add_executable(data_recorder_node
+    src/data_recorder_node.cpp
+)
+target_include_directories(data_recorder_node PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include>"
+)
+ament_target_dependencies(data_recorder_node
+    lvins_config
+    lvins_common
+    rclcpp
+    std_srvs
+    sensor_msgs
+    rosbag2_cpp
 )
 
 # 安装
 install(TARGETS odometry_node
+    DESTINATION lib/${PROJECT_NAME}
+)
+install(TARGETS data_recorder_node
     DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -78,6 +98,6 @@ ament_export_dependencies(
     nav_msgs
     tf2_ros
     cv_bridge
-    rosbag2_transport
+    rosbag2_cpp
 )
 ament_package()
