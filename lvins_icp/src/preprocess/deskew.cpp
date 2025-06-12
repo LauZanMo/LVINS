@@ -18,7 +18,7 @@ PointCloud::Ptr deskew(const RawPointCloud &point_cloud, const LidarGeometryBase
     const auto dt     = (states.back().timestamp - states.front().timestamp) / 20;
     size_t state0_idx = 0;
     for (size_t i = 0; i < 20; ++i) {
-        const long timestamp = states.front().timestamp + dt * i;
+        const auto timestamp = states.front().timestamp + dt * static_cast<long>(i);
         uniform_timestamp[i] = timestamp;
         while (state0_idx + 1 < states.size() && states[state0_idx + 1].timestamp <= timestamp) {
             ++state0_idx;
@@ -50,6 +50,8 @@ PointCloud::Ptr deskew(const RawPointCloud &point_cloud, const LidarGeometryBase
 
             // 雷达点不在探测范围内则跳过
             if (!lidar.isPointValid(point.head<3>())) {
+                valid[i] = 0;
+                ++num_points_skipped;
                 continue;
             }
 

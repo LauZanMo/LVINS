@@ -15,10 +15,9 @@ namespace lvins {
  *          4. 将点集转换为点云<br/>
  * @param point_cloud 原始点云
  * @param lidar 采集原始点云的雷达
- * @param T_bs body坐标系（通常是IMU）到传感器坐标系的变换
+ * @param T_bs 雷达外参
  * @param states 上一点云到当前点云间的导航状态集合
  * @return 运动矫正后的点云
- * @warning 并行处理后可能会存在点云顺序和之前不一致的问题
  */
 PointCloud::Ptr deskew(const RawPointCloud &point_cloud, const LidarGeometryBase &lidar, const SE3f &T_bs,
                        const NavStates &states);
