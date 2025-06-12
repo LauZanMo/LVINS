@@ -9,20 +9,20 @@
 #include <std_srvs/srv/trigger.hpp>
 
 /**
- * @brief 原始数据录制器
+ * @brief 原始数据录制器节点
  */
-class DataRecorder final : public rclcpp::Node {
+class DataRecorderNode final : public rclcpp::Node {
 public:
     /**
      * @brief 构造函数
      * @param program_name 程序名称
      */
-    explicit DataRecorder(const std::string &program_name);
+    explicit DataRecorderNode(const std::string &program_name);
 
     /**
      * @brief 析构函数
      */
-    ~DataRecorder() override;
+    ~DataRecorderNode() override;
 
 private:
     /**

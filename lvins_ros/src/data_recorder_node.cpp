@@ -4,7 +4,7 @@
 
 using namespace lvins;
 
-DataRecorder::DataRecorder(const std::string &program_name) : Node(program_name, program_name) {
+DataRecorderNode::DataRecorderNode(const std::string &program_name) : Node(program_name, program_name) {
     // 获取参数
     declare_parameter<std::string>("save_path", "");
     declare_parameter<std::string>("bag_prefix", "raw_data");
@@ -112,7 +112,7 @@ DataRecorder::DataRecorder(const std::string &program_name) : Node(program_name,
     LVINS_INFO("Data recorder started!");
 }
 
-DataRecorder::~DataRecorder() {
+DataRecorderNode::~DataRecorderNode() {
     LVINS_INFO("Closing data recorder node...");
 
     // 检测是否正在录制
@@ -128,32 +128,32 @@ DataRecorder::~DataRecorder() {
     Logger::shutdown();
 }
 
-void DataRecorder::imuCallback(const std::string &topic, const sensor_msgs::msg::Imu::ConstSharedPtr &msg) {
+void DataRecorderNode::imuCallback(const std::string &topic, const sensor_msgs::msg::Imu::ConstSharedPtr &msg) {
     if (recording_) {
         writer_->write(*msg, topic, msg->header.stamp);
     }
 }
 
-void DataRecorder::gnssCallback(const std::string &topic, const sensor_msgs::msg::NavSatFix::ConstSharedPtr &msg) {
+void DataRecorderNode::gnssCallback(const std::string &topic, const sensor_msgs::msg::NavSatFix::ConstSharedPtr &msg) {
     if (recording_) {
         writer_->write(*msg, topic, msg->header.stamp);
     }
 }
 
-void DataRecorder::pointCloudCallback(const std::string &topic,
+void DataRecorderNode::pointCloudCallback(const std::string &topic,
                                       const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg) {
     if (recording_) {
         writer_->write(*msg, topic, msg->header.stamp);
     }
 }
 
-void DataRecorder::imageCallback(const std::string &topic, const sensor_msgs::msg::Image::ConstSharedPtr &msg) {
+void DataRecorderNode::imageCallback(const std::string &topic, const sensor_msgs::msg::Image::ConstSharedPtr &msg) {
     if (recording_) {
         writer_->write(*msg, topic, msg->header.stamp);
     }
 }
 
-void DataRecorder::startRecordingCallback(const std_srvs::srv::Trigger::Request::ConstSharedPtr & /*request*/,
+void DataRecorderNode::startRecordingCallback(const std_srvs::srv::Trigger::Request::ConstSharedPtr & /*request*/,
                                           const std_srvs::srv::Trigger::Response::SharedPtr &response) {
     // 检测是否正在录制
     if (recording_) {
@@ -180,7 +180,7 @@ void DataRecorder::startRecordingCallback(const std_srvs::srv::Trigger::Request:
     response->message = "Start recording successfully.";
 }
 
-void DataRecorder::stopRecordingCallback(const std_srvs::srv::Trigger::Request::ConstSharedPtr & /*request*/,
+void DataRecorderNode::stopRecordingCallback(const std_srvs::srv::Trigger::Request::ConstSharedPtr & /*request*/,
                                          const std_srvs::srv::Trigger::Response::SharedPtr &response) {
     // 检测是否还未录制
     if (!recording_) {
@@ -205,7 +205,7 @@ void DataRecorder::stopRecordingCallback(const std_srvs::srv::Trigger::Request::
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
     const auto program_name = path_helper::getFileName(argv[0]);
-    rclcpp::spin(std::make_shared<DataRecorder>(program_name));
+    rclcpp::spin(std::make_shared<DataRecorderNode>(program_name));
     rclcpp::shutdown();
 
     return 0;
