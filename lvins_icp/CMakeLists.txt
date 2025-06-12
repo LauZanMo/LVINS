@@ -18,6 +18,7 @@ add_library(${PROJECT_NAME} SHARED
     src/point_cloud.cpp
     src/preprocess/box_filter.cpp
     src/preprocess/voxel_grid_sample.cpp
+    src/preprocess/random_sample.cpp
     src/preprocess/covariance_estimation.cpp
     src/preprocess/copy.cpp
     src/preprocess/deskew.cpp

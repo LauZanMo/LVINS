@@ -1,4 +1,4 @@
-acc_in_g: false # 加速度是否以g为单位
+acc_in_g: true # 加速度是否以g为单位
 gravity_mag: 9.81 # 重力向量模长（m/s²）
 
 noise_params:
@@ -45,10 +45,7 @@ drawer:
 preprocessor:
     point_cloud:
         crop_box_size: 0.5 # 裁剪尺寸（m）
-        voxel_grid_size: 0.2 # 体素尺寸（m）
-        min_voxel_size: 0.2 # 最小体素尺寸（m）
-        max_voxel_size: 1.0 # 最大体素尺寸（m）
-        desire_point_cloud_size: 5000 # 期望点云大小
+        voxel_grid_size: 0.1 # 体素尺寸（m）
 
 point_cloud_aligner:
     max_iterations: 10 # 最大迭代次数
@@ -66,7 +63,7 @@ eskf:
 
 local_mapper:
     leaf_size: 0.5 # 体素尺寸（m）
-    lru_horizon: 10 # LRU删除阈值
+    lru_horizon: 100 # LRU删除阈值
     lru_clear_cycle: 10 # LRU清除周期
     search_offset: 1 # 搜索偏移量
     voxel_content:

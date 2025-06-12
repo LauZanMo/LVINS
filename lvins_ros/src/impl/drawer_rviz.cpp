@@ -1,6 +1,7 @@
 #include "lvins_ros/impl/drawer_rviz.h"
 
 #include "lvins_icp/point_cloud.h"
+#include "lvins_icp/preprocess/random_sample.h"
 #include "lvins_ros/utils/point_cloud_converter.h"
 
 namespace lvins {
@@ -108,7 +109,7 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
         // 原始点云
         if (frame_point_cloud_pubs_[i]->get_subscription_count() != 0) {
             const auto &frame      = bundle->frame(i);
-            const auto point_cloud = transform(*frame->rawPointCloud(), frame->Twf());
+            const auto point_cloud = transform(*frame->pointCloud(), frame->Twf());
             const auto msg         = point_cloud_converter::convert(bundle->timestamp(), map_frame_id_, *point_cloud);
             frame_point_cloud_pubs_[i]->publish(*msg);
         }
@@ -116,7 +117,8 @@ void DrawerRviz::drawLidarFrameBundle(int64_t timestamp, const LidarFrameBundle:
         // 压缩点云
         if (frame_compress_point_cloud_pubs_[i]->get_subscription_count() != 0) {
             const auto &frame      = bundle->frame(i);
-            const auto point_cloud = transform(*frame->pointCloud(), frame->Twf());
+            auto point_cloud = transform(*frame->pointCloud(), frame->Twf());
+            point_cloud = randomSample(point_cloud, 0.1);
             const auto msg         = point_cloud_converter::convert(bundle->timestamp(), map_frame_id_, *point_cloud);
             frame_compress_point_cloud_pubs_[i]->publish(*msg);
         }
