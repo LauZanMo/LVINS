@@ -139,6 +139,7 @@ private:
     LVINS_DECLARE_TIMER(lidar_preprocess_timer_) ///< 雷达预处理计时器
     LVINS_DECLARE_TIMER(pop_timer_)              ///< 获取测量值计时器
     LVINS_DECLARE_TIMER(deskew_timer_)           ///< 点云矫正计时器
+    LVINS_DECLARE_TIMER(update_timer_)           ///< ESKF更新计时器
 
     // 参数
     bool acc_in_g_;                     ///< 加速度是否以g为单位

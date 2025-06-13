@@ -29,4 +29,12 @@ gtsam::imuBias::ConstantBias toImuBias(const Vec3f &bg, const Vec3f &ba);
  */
 SE3f toSE3(const gtsam::Pose3 &pose);
 
+/**
+ * @brief 将位姿从gtsam形式位姿转换为内部形式
+ * @param rot 旋转部分
+ * @param trans 平移部分
+ * @return 内部形式位姿
+ */
+SE3f toSE3(const gtsam::Rot3 &rot, const gtsam::Vector3 &trans);
+
 } // namespace lvins

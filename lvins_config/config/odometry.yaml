@@ -1,4 +1,4 @@
-acc_in_g: true # 加速度是否以g为单位
+acc_in_g: false # 加速度是否以g为单位
 gravity_mag: 9.81 # 重力向量模长（m/s²）
 
 noise_params:
@@ -67,7 +67,7 @@ local_mapper:
     lru_clear_cycle: 10 # LRU清除周期
     search_offset: 1 # 搜索偏移量
     voxel_content:
-        min_dist_in_cell: 0.01 # 容器中最小的点间距离平方
+        min_dist_in_cell: 0.1 # 容器中最小的点间距离
         max_num_points_in_cell: 20 # 容器中最大点数
 
 initializer:
@@ -76,7 +76,7 @@ initializer:
     #     rows: 3
     #     cols: 1
     #     data: [ 1.0, 0.02, 0.2 ] # 参数顺序 [初始化周期（s）、陀螺仪零速阈值（rad/s）、加速度零速阈值（m/s^2）]
-    type: "dynamic" # 静态初始化器
+    type: "dynamic" # 动态初始化器
     parameters:
         rows: 1
         cols: 1

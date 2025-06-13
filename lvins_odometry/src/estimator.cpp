@@ -232,12 +232,15 @@ void Estimator::estimateLoop() {
             LVINS_PRINT_TIMER_MS("Deskew", deskew_timer_);
 
             // 量测更新
+            LVINS_START_TIMER(update_timer_);
             if (lidar_rig_ && !camera_rig_) {
                 const auto task = std::make_shared<eskf::UpdateLidar>(
                         cur_lidar_frame_bundle_->timestamp(), cur_lidar_frame_bundle_, *lidar_rig_,
                         *point_cloud_aligner_, *local_mapper_, *drawer_, 0, estimate_extrinsic_);
                 eskf_->update(task);
             }
+            LVINS_STOP_TIMER(update_timer_);
+            LVINS_PRINT_TIMER_MS("Update", update_timer_);
             const auto measure_state = eskf_->state();
 
             // 检测漂移

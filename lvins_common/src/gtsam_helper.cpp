@@ -20,4 +20,10 @@ SE3f toSE3(const gtsam::Pose3 &pose) {
     return SE3f(T);
 }
 
+SE3f toSE3(const gtsam::Rot3 &rot, const gtsam::Vector3 &trans) {
+    Quatf q(rot.toQuaternion().cast<Float>());
+    q.normalize();
+    return {q, trans.cast<Float>()};
+}
+
 } // namespace lvins
