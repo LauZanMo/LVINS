@@ -1,6 +1,7 @@
 #include "lvins_odometry/init/dynamic_initializer.h"
 #include "lvins_common/gtsam_helper.h"
 #include "lvins_common/rotation_helper.h"
+#include "lvins_icp/preprocess/deskew.h"
 
 namespace lvins {
 
@@ -35,16 +36,27 @@ bool DynamicInitializer::tryInitialize(const LidarFrameBundle::Ptr &lidar_frame_
     if (!initialized_) {
         // 将新的IMU进行单独的预积分，分别加入IMU缓冲区（用于求解和求解完成后的优化）和预积分缓冲区（用于求解）
         gtsam::PreintegratedImuMeasurements preintegrated(imu_params_);
+        NavState state(imus[0].timestamp, SE3f(Mat44f::Identity()), Vec3f::Zero(), Vec3f::Zero(), Vec3f::Zero());
+        NavStates states{state};
         for (size_t i = 1; i < imus.size(); ++i) {
             const auto dt       = 1e-9 * static_cast<double>(imus[i].timestamp - imus[i - 1].timestamp);
             const Vec3f mid_gyr = 0.5 * (imus[i - 1].gyr + imus[i].gyr);
             const Vec3f mid_acc = 0.5 * (imus[i - 1].acc + imus[i].acc);
             preintegrated.integrateMeasurement(mid_acc.cast<double>(), mid_gyr.cast<double>(), dt);
+
+            state.timestamp = imus[i].timestamp;
+            state.T         = toSE3(preintegrated.deltaRij(), preintegrated.deltaPij());
+            state.vel       = preintegrated.deltaVij().cast<Float>();
+            states.push_back(state);
         }
         preintegrated_buffer_.push_back(std::move(preintegrated));
         imu_buffer_.push_back(imus);
 
-        // 将帧束加入帧束缓冲区
+        // 对帧束进行点云矫正并加入帧束缓冲区
+        for (size_t i = 0; i < lidar_frame_bundle->size(); ++i) {
+            const auto &frame   = lidar_frame_bundle->frame(i);
+            frame->pointCloud() = deskew(*frame->preprocessPointCloud(), frame->lidar(), frame->Tbs(), states);
+        }
         lidar_frame_bundle_buffer_.push_back(lidar_frame_bundle);
 
         // 首次输入，则不需要进行点云配准
@@ -53,10 +65,9 @@ bool DynamicInitializer::tryInitialize(const LidarFrameBundle::Ptr &lidar_frame_
             last_lidar_frame_bundle_ = lidar_frame_bundle;
             return false;
         } else { // 否则，需要进行点云配准和缓冲区维护（滑动窗口）
-            const auto result =
-                    aligner_.align(last_lidar_frame_bundle_->pointClouds(), lidar_frame_bundle->pointClouds(),
-                                   SE3f(Mat44f::Identity()), lidar_frame_bundle->Tbs());
-            SE3f T_delta = result.T_tb;
+            const auto result = aligner_.align(last_lidar_frame_bundle_->pointClouds(),
+                                               lidar_frame_bundle->pointClouds(), state.T, lidar_frame_bundle->Tbs());
+            SE3f T_delta      = result.T_tb;
             T_delta_buffer_.push_back(T_delta.cast<double>());
             last_lidar_frame_bundle_ = lidar_frame_bundle;
 
