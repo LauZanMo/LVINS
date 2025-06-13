@@ -111,9 +111,10 @@ class LasSaverNode(Node):
         for point in point_cloud2.read_points_list(
             msg, field_names=("x", "y", "z", "intensity"), skip_nans=True
         ):
-            self.x_list.append(point[0])
-            self.y_list.append(point[1])
-            self.z_list.append(point[2])
+            # NED->ENU
+            self.x_list.append(point[1])
+            self.y_list.append(point[0])
+            self.z_list.append(-point[2])
             self.intensity_list.append(point[3])
 
     def start_storaging_callback(self, _, response):

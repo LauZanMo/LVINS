@@ -227,7 +227,7 @@ void PointCloudAligner::addFactor(const NearestNeighborSearch::Search::ConstPtr 
             values.insert(L(i), toPose3(init_T_ts));
 
             const auto icp_factor =
-                    gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<NearestNeighborSearch::Search>>(
+                    gtsam::make_shared<gtsam_points::IntegratedCT_GICPFactor_<NearestNeighborSearch::Search>>(
                             W(0), L(i), target_nn_search, source_point_clouds[i], target_nn_search);
             icp_factor->set_num_threads(num_threads_);
             graph.add(icp_factor);
@@ -251,7 +251,7 @@ void PointCloudAligner::addFactor(const NearestNeighborSearch::Search::ConstPtr 
         for (size_t i = 0; i < source_point_clouds.size(); ++i) {
             const auto transform_point_cloud = transform(*source_point_clouds[i], init_T_bs[i]);
             const auto icp_factor =
-                    gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<NearestNeighborSearch::Search>>(
+                    gtsam::make_shared<gtsam_points::IntegratedCT_GICPFactor_<NearestNeighborSearch::Search>>(
                             W(0), B(0), target_nn_search, transform_point_cloud, target_nn_search);
             icp_factor->set_num_threads(num_threads_);
             graph.add(icp_factor);
